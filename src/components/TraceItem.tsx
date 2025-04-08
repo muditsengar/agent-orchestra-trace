@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Trace } from '../types/agent';
 import { getAgentById } from '../data/agents';
@@ -18,8 +17,8 @@ const TraceItem: React.FC<TraceItemProps> = ({ trace }) => {
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
-    millisecond: 'numeric',
-    hour12: false
+    hour12: false,
+    fractionalSecondDigits: 3
   }).format(trace.timestamp);
 
   const getBgColorByAgentRole = () => {
