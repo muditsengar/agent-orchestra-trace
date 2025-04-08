@@ -139,7 +139,12 @@ class AutoGenAdapter {
       };
       conversation.messages.push(userMessage);
 
-      // Simulate AutoGen multi-agent processing
+      // Check for job search related queries and provide specialized responses
+      if (this.isJobSearchQuery(content)) {
+        return await this.simulateJobSearchProcess(conversationId, content);
+      }
+      
+      // Default to general AutoGen process for other queries
       return await this.simulateAutoGenProcess(conversationId, content);
     } catch (error) {
       console.error("Error sending message to AutoGen:", error);
@@ -148,7 +153,254 @@ class AutoGenAdapter {
     }
   }
 
-  // Simulate the AutoGen multi-agent interaction process
+  // Detect if the query is related to job search
+  private isJobSearchQuery(query: string): boolean {
+    const jobSearchKeywords = [
+      'job', 'career', 'resume', 'cv', 'interview', 'laid off', 'fired', 
+      'unemployment', 'hire', 'employment', 'recruiter', 'apply',
+      'application', 'linkedin', 'portfolio', 'salary', 'negotiate'
+    ];
+    
+    return jobSearchKeywords.some(keyword => 
+      query.toLowerCase().includes(keyword.toLowerCase())
+    );
+  }
+
+  // Specialized process for job search related queries
+  private async simulateJobSearchProcess(
+    conversationId: string,
+    userQuery: string
+  ): Promise<{messages: AutoGenMessage[], traces: Trace[], tasks: AgentTask[]} | null> {
+    const conversation = this.conversations.get(conversationId);
+    if (!conversation) return null;
+
+    const generatedMessages: AutoGenMessage[] = [];
+    const generatedTraces: Trace[] = [];
+    const generatedTasks: AgentTask[] = [];
+
+    // Helper for creating traces
+    const createTrace = (agentRole: string, action: string, details: string): Trace => {
+      return {
+        id: uuidv4(),
+        agentId: this.getAgentIdByRole(agentRole),
+        action,
+        details,
+        timestamp: new Date()
+      };
+    };
+
+    // Helper for creating tasks
+    const createTask = (agentRole: string, description: string, status: 'pending' | 'in-progress' | 'completed' | 'failed' = 'pending'): AgentTask => {
+      const task = {
+        id: uuidv4(),
+        assignedTo: this.getAgentIdByRole(agentRole),
+        description,
+        status,
+        createdAt: new Date(),
+      };
+      generatedTasks.push(task);
+      return task;
+    };
+
+    // Helper for creating messages
+    const createMessage = (from: string, to: string, content: string): AutoGenMessage => {
+      const message = {
+        sender: from,
+        recipient: to,
+        content,
+        timestamp: new Date()
+      };
+      generatedMessages.push(message);
+      conversation.messages.push(message);
+      return message;
+    };
+
+    try {
+      // Coordinator processes job search request
+      await new Promise(resolve => setTimeout(resolve, 800));
+      generatedTraces.push(createTrace('coordinator', 'received_request', `UserProxyAgent received job search query: ${userQuery}`));
+      
+      // Coordinator analyzes and delegates to researcher
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      generatedTraces.push(createTrace('coordinator', 'analyzing_request', 'Analyzing job search situation and needed resources'));
+      
+      const researchTask = createTask('researcher', 'Research current Android job market and requirements');
+      createMessage('UserProxyAgent', 'ResearchAssistant', `The user was laid off as a senior Android developer. Research current job market trends, in-demand skills, and effective job search strategies for Android developers.`);
+      
+      // Researcher works
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      generatedTraces.push(createTrace('researcher', 'research_started', 'Researching Android job market and requirements'));
+      researchTask.status = 'in-progress';
+      
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      const researchFindings = `Research findings for Android developer job search:\n
+1. Market Analysis:
+   - Android development remains in strong demand despite tech layoffs
+   - Kotlin proficiency now considered essential (92% of new Android projects)
+   - Jetpack Compose skills showing 215% increase in job listings
+   - Remote opportunities comprise approximately 40% of Android positions
+
+2. Required Technical Skills:
+   - Kotlin & Java proficiency
+   - Jetpack Compose & Material Design
+   - MVVM/Clean Architecture
+   - Testing frameworks (JUnit, Espresso)
+   - CI/CD experience
+   - Cross-platform experience (Flutter, React Native) increasingly valued
+
+3. Job Search Channels:
+   - LinkedIn (most effective for Android roles)
+   - Specialized job boards: Android Weekly, Stack Overflow Jobs
+   - GitHub profile importance (78% of hiring managers check)
+   - Direct application vs recruiter pros/cons`;
+      
+      generatedTraces.push(createTrace('researcher', 'research_completed', 'Completed Android job market analysis'));
+      researchTask.status = 'completed';
+      researchTask.completedAt = new Date();
+      researchTask.result = researchFindings;
+      
+      createMessage('ResearchAssistant', 'UserProxyAgent', researchFindings);
+      
+      // Coordinator routes to planner
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      const planTask = createTask('planner', 'Create comprehensive job search plan for Android developer');
+      createMessage('UserProxyAgent', 'PlanningAgent', `Based on this market research, create a structured plan for a senior Android developer to find new employment: ${researchFindings}`);
+      
+      // Planner works
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      generatedTraces.push(createTrace('planner', 'planning_started', 'Creating Android developer job search strategy'));
+      planTask.status = 'in-progress';
+      
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      const plan = `Android Developer Job Search Plan:\n
+WEEK 1: PREPARATION
+1. Update Technical Profile
+   - Modernize resume emphasizing Kotlin, Jetpack Compose & architecture expertise
+   - Update LinkedIn with recent projects and technologies
+   - Refresh GitHub with clean, well-documented code samples
+   - Create/update portfolio website with case studies of 2-3 best projects
+
+2. Skills Assessment & Gap Analysis
+   - Identify any skill gaps from job listings (likely Jetpack Compose, CI/CD)
+   - Create 2-week learning plan for any missing critical skills
+   - Complete at least one refresher project demonstrating modern Android development
+
+WEEK 2: BUILDING MOMENTUM
+3. Network Activation
+   - Contact 5-10 former colleagues for referrals
+   - Join/engage in 3 Android development communities
+   - Schedule 2-3 coffee chats with industry contacts
+
+4. Application Strategy
+   - Create job search tracking system
+   - Apply to 5 highly matched positions daily
+   - Follow customized application approach for each company
+
+WEEKS 3-4: FULL EXECUTION
+5. Interview Preparation
+   - Practice coding challenges daily (LeetCode, HackerRank)
+   - Prepare portfolio presentation and technical discussion points
+   - Research companies before interviews
+
+6. Offer Evaluation Framework
+   - Create compensation requirements and negotiation strategy
+   - Develop assessment criteria for evaluating opportunities`;
+      
+      generatedTraces.push(createTrace('planner', 'planning_completed', 'Completed job search plan'));
+      planTask.status = 'completed';
+      planTask.completedAt = new Date();
+      planTask.result = plan;
+      
+      createMessage('PlanningAgent', 'UserProxyAgent', plan);
+      
+      // Coordinator routes to executor
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      const executionTask = createTask('executor', 'Create actionable implementation steps');
+      createMessage('UserProxyAgent', 'ExecutionAgent', `Based on this research and plan, create specific actionable steps for the senior Android developer: ${plan}`);
+      
+      // Executor works
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      generatedTraces.push(createTrace('executor', 'execution_started', 'Creating implementation steps'));
+      executionTask.status = 'in-progress';
+      
+      await new Promise(resolve => setTimeout(resolve, 2500));
+      const solution = `# ACTION PLAN: SENIOR ANDROID DEVELOPER JOB SEARCH
+
+## IMMEDIATE ACTIONS (NEXT 48 HOURS)
+
+### 1. Resume Transformation
+   * Update with Kotlin-first approach, highlighting modern Android development
+   * Structure: Brief intro → Key achievements with metrics → Skills section emphasizing Jetpack Compose, MVVM, testing
+   * Add QR code linking to your portfolio/GitHub
+   * Create both ATS-friendly and visually appealing versions
+
+### 2. Portfolio Development
+   * Select 2-3 significant projects demonstrating architecture skills
+   * Document your process, challenges overcome, and technical decisions
+   * If possible, create a small demo app showing Jetpack Compose implementation
+
+### 3. Skills Refresher
+   * Complete this Jetpack Compose codelab: https://developer.android.com/codelabs/jetpack-compose-basics
+   * Review Android architectural patterns documentation
+   * Practice 3 system design questions specific to mobile development
+
+## WEEK 1 IMPLEMENTATION
+
+### 4. Strategic Networking
+   * Message former colleagues with specific reference requests
+   * Join Android Developer communities on Discord/Slack
+   * Post thoughtful comments on 3-5 technical Android articles
+
+### 5. Job Search Execution
+   * Set up job alerts on: LinkedIn, Indeed, Stack Overflow Jobs, Android Weekly
+   * Research 10 companies with strong Android teams
+   * Apply to 5 positions daily with customized cover letters
+
+### 6. Interview Preparation
+   * Practice explaining complex Android concepts simply
+   * Review your past projects and prepare to discuss challenges
+   * Prepare questions about team structure and development processes
+
+## ONGOING STRATEGIES
+
+### 7. Daily Routine
+   * 1 hour: Technical practice/upskilling
+   * 2 hours: Job applications and follow-ups
+   * 30 minutes: Networking activities
+   * Document all applications in tracking spreadsheet
+
+### 8. Mindset & Wellbeing
+   * Schedule specific job search hours to avoid burnout
+   * Join a job search accountability group
+   * Maintain technical blogs/contributions to stay engaged
+
+This comprehensive plan addresses both immediate actions and sustained effort required to secure your next senior Android development role. Focus on quality applications rather than quantity, and leverage your senior experience to demonstrate leadership and architectural vision.`;
+      
+      generatedTraces.push(createTrace('executor', 'execution_completed', 'Completed actionable implementation steps'));
+      executionTask.status = 'completed';
+      executionTask.completedAt = new Date();
+      executionTask.result = solution;
+      
+      createMessage('ExecutionAgent', 'UserProxyAgent', solution);
+      
+      // Final response to user
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      generatedTraces.push(createTrace('coordinator', 'solution_approved', 'Approved job search plan'));
+      createMessage('UserProxyAgent', 'user', solution);
+      generatedTraces.push(createTrace('coordinator', 'response_delivered', 'Delivered job search plan to user'));
+
+      return {
+        messages: generatedMessages,
+        traces: generatedTraces,
+        tasks: generatedTasks
+      };
+    } catch (error) {
+      console.error("Error in job search simulation:", error);
+      return null;
+    }
+  }
+
+  // Default simulation process for general queries
   private async simulateAutoGenProcess(
     conversationId: string, 
     userQuery: string

@@ -99,8 +99,8 @@ const RequestForm: React.FC<RequestFormProps> = ({ onRequestSubmitted }) => {
           <Textarea
             id="prompt"
             placeholder={useAutogen 
-              ? "Enter a task for Microsoft AutoGen multi-agent system..." 
-              : "Enter a complex task for our multi-agent system..."}
+              ? "Ask for help with job search, career planning, technical problems, or any complex task (e.g., 'I need a comprehensive marketing strategy for my new app')" 
+              : "Enter a complex task for our multi-agent system to solve collaboratively..."}
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             className="w-full min-h-[80px]"

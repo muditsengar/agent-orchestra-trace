@@ -43,11 +43,34 @@ const TraceItem: React.FC<TraceItemProps> = ({ trace }) => {
     if (trace.action.includes('research')) return '📚';
     if (trace.action.includes('plan')) return '📋';
     if (trace.action.includes('execut')) return '⚙️';
+    if (trace.action.includes('job')) return '💼';
+    if (trace.action.includes('career')) return '🚀';
     return '🔄';
   };
 
   // Check if the trace is from AutoGen
   const isAutoGenTrace = trace.details.includes('(using AutoGen)');
+
+  // Format detailed traces better
+  const formatTraceDetails = (details: string) => {
+    // Remove the AutoGen marker for display purposes
+    let formattedDetails = details.replace(' (using AutoGen)', '');
+    
+    // Highlight important keywords in job search related traces
+    if (formattedDetails.toLowerCase().includes('job') || 
+        formattedDetails.toLowerCase().includes('career') || 
+        formattedDetails.toLowerCase().includes('android')) {
+      formattedDetails = formattedDetails
+        .replace(/job search/gi, '<span class="text-blue-600 font-medium">job search</span>')
+        .replace(/android/gi, '<span class="text-green-600 font-medium">Android</span>')
+        .replace(/developer/gi, '<span class="text-purple-600 font-medium">developer</span>')
+        .replace(/skills/gi, '<span class="text-amber-600 font-medium">skills</span>');
+      
+      return <span dangerouslySetInnerHTML={{ __html: formattedDetails }} />;
+    }
+    
+    return formattedDetails;
+  };
 
   return (
     <div className={cn(
@@ -67,7 +90,7 @@ const TraceItem: React.FC<TraceItemProps> = ({ trace }) => {
       </div>
       
       <div className="mt-1 text-sm text-gray-800">
-        <span className="font-semibold capitalize">{trace.action.replace(/_/g, ' ')}:</span> {trace.details.replace(' (using AutoGen)', '')}
+        <span className="font-semibold capitalize">{trace.action.replace(/_/g, ' ')}:</span> {formatTraceDetails(trace.details)}
       </div>
     </div>
   );
