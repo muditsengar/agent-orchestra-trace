@@ -1,8 +1,12 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Button } from '../components/ui/button';
 import { Textarea } from '../components/ui/textarea';
-import { toast } from 'sonner';
+import { Switch } from '../components/ui/switch';
+import { Label } from '../components/ui/label';
+import { toast } from '@/components/ui/sonner';
 import { agentService } from '../services/agentService';
+import { autogenAdapter } from '../services/autogenAdapter';
 
 interface RequestFormProps {
   onRequestSubmitted?: () => void;
@@ -11,6 +15,35 @@ interface RequestFormProps {
 const RequestForm: React.FC<RequestFormProps> = ({ onRequestSubmitted }) => {
   const [prompt, setPrompt] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [useAutogen, setUseAutogen] = useState(false);
+  const [autogenConnected, setAutogenConnected] = useState(false);
+
+  useEffect(() => {
+    // Check if AutoGen backend is connected
+    const checkConnection = async () => {
+      const isConnected = await autogenAdapter.isBackendConnected();
+      setAutogenConnected(isConnected);
+    };
+    
+    if (useAutogen) {
+      checkConnection();
+    }
+  }, [useAutogen]);
+
+  const handleToggleAutogen = async (checked: boolean) => {
+    setUseAutogen(checked);
+    agentService.toggleAutogen(checked);
+    
+    if (checked && !autogenConnected) {
+      try {
+        const connected = await autogenAdapter.connect();
+        setAutogenConnected(connected);
+      } catch (error) {
+        console.error("Failed to connect to AutoGen:", error);
+        toast.error("Failed to connect to AutoGen backend");
+      }
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,20 +71,43 @@ const RequestForm: React.FC<RequestFormProps> = ({ onRequestSubmitted }) => {
   return (
     <form onSubmit={handleSubmit} className="bg-white shadow-md rounded-lg p-4">
       <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <Switch 
+              id="autogen-mode"
+              checked={useAutogen}
+              onCheckedChange={handleToggleAutogen}
+            />
+            <Label htmlFor="autogen-mode" className="cursor-pointer">
+              Use Microsoft AutoGen
+            </Label>
+          </div>
+          {useAutogen && (
+            <div className="flex items-center">
+              <span className={`h-2 w-2 rounded-full mr-2 ${autogenConnected ? 'bg-green-500' : 'bg-amber-500'}`}></span>
+              <span className="text-xs text-gray-600">
+                {autogenConnected ? 'Connected' : 'Connecting...'}
+              </span>
+            </div>
+          )}
+        </div>
+        
         <div>
           <label htmlFor="prompt" className="block text-sm font-medium mb-1">
             Enter your request
           </label>
           <Textarea
             id="prompt"
-            placeholder="Enter a complex task for our multi-agent system..."
+            placeholder={useAutogen 
+              ? "Enter a task for Microsoft AutoGen multi-agent system..." 
+              : "Enter a complex task for our multi-agent system..."}
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             className="w-full min-h-[80px]"
           />
         </div>
         <div className="flex justify-end">
-          <Button type="submit" disabled={isSubmitting || !prompt.trim()}>
+          <Button type="submit" disabled={isSubmitting || !prompt.trim() || (useAutogen && !autogenConnected)}>
             {isSubmitting ? 'Submitting...' : 'Submit Request'}
           </Button>
         </div>

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Trace } from '../types/agent';
 import { getAgentById } from '../data/agents';
@@ -45,6 +46,9 @@ const TraceItem: React.FC<TraceItemProps> = ({ trace }) => {
     return '🔄';
   };
 
+  // Check if the trace is from AutoGen
+  const isAutoGenTrace = trace.details.includes('(using AutoGen)');
+
   return (
     <div className={cn(
       'px-3 py-2 rounded-md mb-2 border-l-4',
@@ -55,12 +59,15 @@ const TraceItem: React.FC<TraceItemProps> = ({ trace }) => {
         <div className="flex items-center space-x-2">
           <span className="text-lg">{getActionIcon()}</span>
           <AgentBadge agent={agent} size="sm" />
+          {isAutoGenTrace && (
+            <span className="text-xs bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded">AutoGen</span>
+          )}
         </div>
         <span className="text-xs text-gray-500">{formattedTime}</span>
       </div>
       
       <div className="mt-1 text-sm text-gray-800">
-        <span className="font-semibold capitalize">{trace.action.replace(/_/g, ' ')}:</span> {trace.details}
+        <span className="font-semibold capitalize">{trace.action.replace(/_/g, ' ')}:</span> {trace.details.replace(' (using AutoGen)', '')}
       </div>
     </div>
   );

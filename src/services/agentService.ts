@@ -1,7 +1,8 @@
-
 import { v4 as uuidv4 } from 'uuid';
 import { Agent, Message, Trace, AgentTask, UserRequest } from '../types/agent';
 import { agents, getAgentById, getAgentByRole } from '../data/agents';
+import { toast } from '@/components/ui/sonner';
+import { autogenAdapter } from './autogenAdapter';
 
 // Simulate delays for realistic trace generation
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -13,6 +14,8 @@ class AgentService {
   private userRequests: UserRequest[] = [];
   private processingRequest: boolean = false;
   private onUpdateCallbacks: (() => void)[] = [];
+  private useAutogen: boolean = false; // Flag to use AutoGen
+  private currentConversationId: string | null = null;
 
   constructor() {}
 
@@ -50,6 +53,20 @@ class AgentService {
 
   isProcessing(): boolean {
     return this.processingRequest;
+  }
+
+  // Enable or disable AutoGen
+  toggleAutogen(enable: boolean): boolean {
+    this.useAutogen = enable;
+    if (enable) {
+      // Connect to AutoGen backend when enabled
+      autogenAdapter.connect();
+    }
+    return this.useAutogen;
+  }
+
+  isUsingAutogen(): boolean {
+    return this.useAutogen;
   }
 
   private addMessage(from: string, to: string, content: string, type: 'request' | 'response' | 'internal', metadata?: Record<string, any>): Message {
@@ -120,12 +137,16 @@ class AgentService {
     this.userRequests.push(userRequest);
     this.triggerUpdate();
 
-    // Initiate the multi-agent process
-    this.addMessage('user', 'coordinator-1', content, 'request');
-    this.addTrace('coordinator-1', 'received_request', `User requested: ${content}`);
-
     try {
-      await this.simulateAgentCollaboration(content, userRequest.id);
+      if (this.useAutogen && await autogenAdapter.connect()) {
+        // Process request using AutoGen
+        await this.processWithAutogen(content, userRequest.id);
+      } else {
+        // Process with our simulated agent collaboration
+        this.addMessage('user', 'coordinator-1', content, 'request');
+        this.addTrace('coordinator-1', 'received_request', `User requested: ${content}`);
+        await this.simulateAgentCollaboration(content, userRequest.id);
+      }
       
       // Update request status
       const requestIndex = this.userRequests.findIndex(req => req.id === userRequest.id);
@@ -147,6 +168,7 @@ class AgentService {
         this.userRequests[requestIndex].status = 'failed';
         this.userRequests[requestIndex].result = `Error: ${error instanceof Error ? error.message : 'Unknown error'}`;
       }
+      toast.error(error instanceof Error ? error.message : 'Failed to process request');
     } finally {
       this.processingRequest = false;
       this.triggerUpdate();
@@ -155,6 +177,71 @@ class AgentService {
     return userRequest;
   }
 
+  // Process request using Microsoft AutoGen
+  private async processWithAutogen(userRequest: string, requestId: string): Promise<void> {
+    try {
+      // Create a new AutoGen conversation if needed
+      if (!this.currentConversationId) {
+        this.currentConversationId = await autogenAdapter.createConversation();
+        if (!this.currentConversationId) {
+          throw new Error("Failed to create AutoGen conversation");
+        }
+      }
+      
+      // Add initial user message
+      this.addMessage('user', 'coordinator-1', userRequest, 'request');
+      this.addTrace('coordinator-1', 'received_request', `User requested: ${userRequest} (using AutoGen)`);
+      
+      // Send to AutoGen and process response
+      const result = await autogenAdapter.sendMessage(this.currentConversationId, userRequest);
+      
+      if (result) {
+        // Add generated messages to our system
+        result.messages.forEach(msg => {
+          // Skip messages already in our system (like the initial user message)
+          if (msg.sender !== 'user') {
+            this.addMessage(
+              this.convertAutoGenAgentToId(msg.sender),
+              this.convertAutoGenAgentToId(msg.recipient),
+              msg.content,
+              msg.recipient === 'user' ? 'response' : 'internal'
+            );
+          }
+        });
+        
+        // Add traces
+        result.traces.forEach(trace => {
+          this.traces.push(trace);
+        });
+        
+        // Add tasks
+        result.tasks.forEach(task => {
+          this.tasks.push(task);
+        });
+        
+        this.triggerUpdate();
+      } else {
+        throw new Error("AutoGen processing failed");
+      }
+    } catch (error) {
+      console.error("AutoGen processing error:", error);
+      throw new Error(`AutoGen error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  // Convert AutoGen agent names to our internal agent IDs
+  private convertAutoGenAgentToId(agentName: string): string {
+    switch (agentName) {
+      case 'UserProxyAgent': return 'coordinator-1';
+      case 'ResearchAssistant': return 'researcher-1';
+      case 'PlanningAgent': return 'planner-1';
+      case 'ExecutionAgent': return 'executor-1';
+      case 'user': return 'user';
+      default: return agentName;
+    }
+  }
+
+  // Original simulate function (unchanged)
   private async simulateAgentCollaboration(userRequest: string, requestId: string): Promise<void> {
     // Step 1: Coordinator analyzes the request and creates tasks for other agents
     await delay(1500);
@@ -254,6 +341,7 @@ class AgentService {
     this.tasks = [];
     this.userRequests = [];
     this.processingRequest = false;
+    this.currentConversationId = null;
     this.triggerUpdate();
   }
 }
