@@ -1,3 +1,4 @@
+
 import { v4 as uuidv4 } from 'uuid';
 import { Message, Trace, AgentTask } from '../types/agent';
 
@@ -29,6 +30,11 @@ class RasaAdapter {
     // Simulate connection to Rasa server
     console.log('Connecting to Rasa backend...');
     this.connected = true;
+    return this.connected;
+  }
+
+  // Add the missing isBackendConnected method
+  isBackendConnected(): boolean {
     return this.connected;
   }
 
