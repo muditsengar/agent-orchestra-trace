@@ -1,3 +1,4 @@
+
 import { v4 as uuidv4 } from 'uuid';
 import { Agent, Message, Trace, AgentTask, UserRequest } from '../types/agent';
 import { agents, getAgentById, getAgentByRole } from '../data/agents';
@@ -642,6 +643,134 @@ class AgentService {
     
     if (isJobSearch && userRequest.toLowerCase().includes('android')) {
       // Provide detailed implementation for Android developer job search
+      const techSkillsTemplate = 
+        "ANDROID CORE SKILLS ASSESSMENT:\n" +
+        "- Android Lifecycle Management: __/5\n" +
+        "- UI Implementation (XML): __/5\n" +
+        "- Jetpack Compose: __/5\n" +
+        "- Kotlin Proficiency: __/5\n" +
+        "- Java Proficiency: __/5\n" +
+        "- Architecture (MVVM/Clean): __/5\n" +
+        "- Testing Expertise: __/5\n" +
+        "- Performance Optimization: __/5\n" +
+        "- Dependency Injection: __/5\n" +
+        "- API Integration: __/5\n" +
+        "- Database (Room/SQLite): __/5\n" +
+        "- Concurrency (Coroutines): __/5";
+
+      const technicalExpertise = 
+        "TECHNICAL EXPERTISE\n" +
+        "• Programming: Kotlin (Advanced, 5+ years), Java (Expert, 8+ years)\n" +
+        "• UI Development: Jetpack Compose, ConstraintLayout, Material Design Components\n" +
+        "• Architecture: MVVM, Clean Architecture with Use Cases, MVI\n" +
+        "• Asynchronous Programming: Coroutines, Flow, StateFlow/SharedFlow\n" +
+        "• Dependency Injection: Hilt, Dagger2, Koin\n" +
+        "• Networking: Retrofit, OkHttp, Apollo GraphQL\n" +
+        "• Local Storage: Room, SQLite, DataStore, Encrypted Preferences\n" +
+        "• Image Loading: Coil, Glide\n" +
+        "• Testing: JUnit, Mockito, Espresso, Robolectric, MockK, Turbine\n" +
+        "• CI/CD: GitHub Actions, Bitrise, Jenkins\n" +
+        "• App Performance: Memory optimization, custom view performance, StrictMode\n" +
+        "• App Security: Encryption, secure networking, obfuscation";
+
+      const readmeTemplate =
+        "# Android Project Name\n\n" +
+        "## Overview\n" +
+        "Brief description of what the app does and what problem it solves.\n\n" +
+        "## Architecture\n" +
+        "This application implements Clean Architecture with MVVM presentation layer:\n" +
+        "- Domain Layer: Business logic and use cases\n" +
+        "- Data Layer: Repository implementations and data sources\n" +
+        "- Presentation Layer: ViewModels, Jetpack Compose UI, and state management\n\n" +
+        "## Technical Highlights\n" +
+        "- 100% Kotlin implementation\n" +
+        "- Jetpack Compose UI with Material 3 design\n" +
+        "- Unidirectional data flow with StateFlow/SharedFlow\n" +
+        "- Dependency injection with Hilt\n" +
+        "- Coroutines & Flow for asynchronous operations\n" +
+        "- Navigation component for screen transitions\n" +
+        "- Comprehensive test coverage\n" +
+        "- Modular architecture for scalability\n\n" +
+        "## Screenshots\n" +
+        "[Include 2-3 screenshots or GIFs demonstrating key features]\n\n" +
+        "## Core Features\n" +
+        "- Feature 1 with technical description\n" +
+        "- Feature 2 with technical description\n" +
+        "- ...\n\n" +
+        "## Libraries Used\n" +
+        "- [List key libraries and why they were chosen]\n\n" +
+        "## Performance Considerations\n" +
+        "- [Describe specific optimizations implemented]\n\n" +
+        "## Getting Started\n" +
+        "[Instructions for building and running the project]";
+
+      const linkedinTemplate = 
+        "Senior Android developer with [X] years of experience crafting high-quality mobile applications using Kotlin and modern Android practices.\n\n" +
+        "Technical expertise:\n" +
+        "• Modern Android development with Jetpack components\n" +
+        "• UI implementation with Jetpack Compose\n" +
+        "• Clean Architecture & MVVM implementation\n" +
+        "• Performance optimization & memory management\n" +
+        "• Leading development teams and mentoring\n\n" +
+        "I specialize in building [type of apps] that prioritize [user experience/performance/stability]. My approach combines architectural best practices with pragmatic solutions to deliver exceptional mobile experiences.\n\n" +
+        "Currently seeking new opportunities to create impactful Android applications with forward-thinking teams.";
+
+      const companyResearchTemplate = 
+        "COMPANY: [Name]\n" +
+        "Products: [Key Android products]\n" +
+        "Tech Stack: [Known Android technologies based on job listings/GitHub]\n" +
+        "Team Size: [If available]\n" +
+        "Funding Status: [Public/Series X/Bootstrap]\n" +
+        "Interview Process: [Based on Glassdoor or similar]\n" +
+        "Key Engineers: [Android team leads if identifiable]\n" +
+        "Values/Culture: [Based on website/social media]\n" +
+        "Recent News: [Product launches, funding, etc.]\n" +
+        "Why I'm Interested: [Specific aspects that appeal to you]\n" +
+        "Potential Connections: [People you know at the company]\n" +
+        "Application Strategy: [Direct/Referral/Custom approach]";
+
+      const coverLetterTemplate =
+        "My technical expertise aligns perfectly with [Company]'s Android development needs:\n\n" +
+        "• Modern Android Development: I've implemented [specific technology from job posting] in [previous project], resulting in [measurable outcome]. My experience with Jetpack Compose has enabled me to create [specific UI benefit].\n\n" +
+        "• Architecture Expertise: At [Previous Company], I led the implementation of Clean Architecture with MVVM presentation layer, resulting in a 40% reduction in bug reports and significantly improved development velocity.\n\n" +
+        "• Performance Optimization: I reduced app startup time by 65% by implementing [specific technique], and optimized memory usage across complex screens with large datasets.\n\n" +
+        "• Leadership: I've mentored junior developers through architecture design sessions and code reviews, helping them grow into independent contributors capable of leading feature development.";
+
+      const starMethodExample =
+        "Question: Tell me about a challenging project and how you overcame obstacles.\n\n" +
+        "Situation: At [Company], we needed to redesign our e-commerce app which had grown organically and suffered from performance issues, crashes, and poor user experience. It had a 3.2 star rating and increasing user complaints.\n\n" +
+        "Task: As Senior Android Developer, I was tasked with leading the architectural redesign while maintaining feature parity and minimizing disruption for our 500,000 monthly active users.\n\n" +
+        "Action:\n" +
+        "1. Conducted comprehensive analysis of performance bottlenecks using Android Profiler\n" +
+        "2. Created migration plan with phased approach to reduce risk\n" +
+        "3. Implemented Clean Architecture with clear separation of concerns\n" +
+        "4. Rebuilt core components using modern Jetpack libraries\n" +
+        "5. Set up comprehensive testing suite with unit, integration and UI tests\n" +
+        "6. Mentored team of 4 developers through the transition\n" +
+        "7. Implemented feature flags to gradually roll out changes\n\n" +
+        "Result: After 4 months, we successfully relaunched with:\n" +
+        "- 85% crash reduction\n" +
+        "- 74% faster app startup\n" +
+        "- 40% reduction in ANR reports\n" +
+        "- App store rating improved from 3.2 to 4.6 stars\n" +
+        "- Development velocity increased with new features shipping 30% faster";
+
+      const dayPlanTemplate =
+        "# My 30-60-90 Day Plan as Senior Android Developer at [Company]\n\n" +
+        "## First 30 Days: Learning & Integration\n" +
+        "- Complete comprehensive onboarding process and set up development environment\n" +
+        "- Build and run all existing Android applications\n" +
+        "- Review architecture documentation and understand current codebase structure\n" +
+        "- Meet with all team members and key stakeholders to understand roles and workflows\n" +
+        "- Identify immediate pain points in the development process or codebase\n" +
+        "- Begin contributing by fixing 3-5 small bugs to understand development workflow\n" +
+        "- Document findings and create initial improvement proposals\n\n" +
+        "SPECIFIC MEASURABLE GOALS:\n" +
+        "1. Complete setup of all development tools and gain access to necessary systems\n" +
+        "2. Successfully push at least 3 bug fixes to production\n" +
+        "3. Create comprehensive documentation of current architecture and workflows\n" +
+        "4. Identify at least 2 quick wins for improving development process";
+
       executionResult = `# DETAILED SENIOR ANDROID DEVELOPER JOB SEARCH IMPLEMENTATION GUIDE
 
 ## WEEK 1: DETAILED IMPLEMENTATION EXAMPLES
@@ -649,21 +778,9 @@ class AgentService {
 ### DAY 1: SKILLS ASSESSMENT & ENVIRONMENT SETUP
 
 **Technical Skills Self-Assessment Template:**
-```
-ANDROID CORE SKILLS ASSESSMENT:
-- Android Lifecycle Management: __/5
-- UI Implementation (XML): __/5
-- Jetpack Compose: __/5
-- Kotlin Proficiency: __/5
-- Java Proficiency: __/5
-- Architecture (MVVM/Clean): __/5
-- Testing Expertise: __/5
-- Performance Optimization: __/5
-- Dependency Injection: __/5
-- API Integration: __/5
-- Database (Room/SQLite): __/5
-- Concurrency (Coroutines): __/5
-```
+\`\`\`
+${techSkillsTemplate}
+\`\`\`
 
 **Job Search Tracker Setup:**
 Create a Notion database with these columns:
@@ -684,21 +801,9 @@ Create a Notion database with these columns:
 ### DAY 2: RESUME MODERNIZATION
 
 **Senior Android Developer Resume - Technical Skills Section Example:**
-```
-TECHNICAL EXPERTISE
-• Programming: Kotlin (Advanced, 5+ years), Java (Expert, 8+ years)
-• UI Development: Jetpack Compose, ConstraintLayout, Material Design Components
-• Architecture: MVVM, Clean Architecture with Use Cases, MVI
-• Asynchronous Programming: Coroutines, Flow, StateFlow/SharedFlow
-• Dependency Injection: Hilt, Dagger2, Koin
-• Networking: Retrofit, OkHttp, Apollo GraphQL
-• Local Storage: Room, SQLite, DataStore, Encrypted Preferences
-• Image Loading: Coil, Glide
-• Testing: JUnit, Mockito, Espresso, Robolectric, MockK, Turbine
-• CI/CD: GitHub Actions, Bitrise, Jenkins
-• App Performance: Memory optimization, custom view performance, StrictMode
-• App Security: Encryption, secure networking, obfuscation
-```
+\`\`\`
+${technicalExpertise}
+\`\`\`
 
 **Resume Achievement Bullets (With Metrics):**
 - "Redesigned app architecture using MVVM and Clean Architecture principles, reducing crash rate by 87% and improving Play Store rating from 3.4 to 4.7 stars"
@@ -710,45 +815,9 @@ TECHNICAL EXPERTISE
 ### DAY 3-4: PORTFOLIO DEVELOPMENT
 
 **GitHub Project README Template:**
-```markdown
-# Android Project Name
-
-## Overview
-Brief description of what the app does and what problem it solves.
-
-## Architecture
-This application implements Clean Architecture with MVVM presentation layer:
-- Domain Layer: Business logic and use cases
-- Data Layer: Repository implementations and data sources
-- Presentation Layer: ViewModels, Jetpack Compose UI, and state management
-
-## Technical Highlights
-- 100% Kotlin implementation
-- Jetpack Compose UI with Material 3 design
-- Unidirectional data flow with StateFlow/SharedFlow
-- Dependency injection with Hilt
-- Coroutines & Flow for asynchronous operations
-- Navigation component for screen transitions
-- Comprehensive test coverage
-- Modular architecture for scalability
-
-## Screenshots
-[Include 2-3 screenshots or GIFs demonstrating key features]
-
-## Core Features
-- Feature 1 with technical description
-- Feature 2 with technical description
-- ...
-
-## Libraries Used
-- [List key libraries and why they were chosen]
-
-## Performance Considerations
-- [Describe specific optimizations implemented]
-
-## Getting Started
-[Instructions for building and running the project]
-```
+\`\`\`markdown
+${readmeTemplate}
+\`\`\`
 
 **Portfolio Demo App Concept:**
 Create a "TechJobTracker" app with these features:
@@ -768,38 +837,16 @@ Create a "TechJobTracker" app with these features:
 - "Android Engineering Leader | Jetpack Compose | MVVM/Clean Architecture | Performance Optimization"
 
 **LinkedIn About Section Template:**
-```
-Senior Android developer with [X] years of experience crafting high-quality mobile applications using Kotlin and modern Android practices.
-
-Technical expertise:
-• Modern Android development with Jetpack components
-• UI implementation with Jetpack Compose
-• Clean Architecture & MVVM implementation
-• Performance optimization & memory management
-• Leading development teams and mentoring
-
-I specialize in building [type of apps] that prioritize [user experience/performance/stability]. My approach combines architectural best practices with pragmatic solutions to deliver exceptional mobile experiences.
-
-Currently seeking new opportunities to create impactful Android applications with forward-thinking teams.
-```
+\`\`\`
+${linkedinTemplate}
+\`\`\`
 
 ### DAY 6-7: MARKET RESEARCH & NETWORKING
 
 **Company Research Template:**
-```
-COMPANY: [Name]
-Products: [Key Android products]
-Tech Stack: [Known Android technologies based on job listings/GitHub]
-Team Size: [If available]
-Funding Status: [Public/Series X/Bootstrap]
-Interview Process: [Based on Glassdoor or similar]
-Key Engineers: [Android team leads if identifiable]
-Values/Culture: [Based on website/social media]
-Recent News: [Product launches, funding, etc.]
-Why I'm Interested: [Specific aspects that appeal to you]
-Potential Connections: [People you know at the company]
-Application Strategy: [Direct/Referral/Custom approach]
-```
+\`\`\`
+${companyResearchTemplate}
+\`\`\`
 
 ## WEEK 2: TECHNICAL PREPARATION EXAMPLES
 
@@ -824,17 +871,9 @@ Implement a GitHub repository browser that:
 ### DAY 11-14: JOB SEARCH SETUP & INITIAL APPLICATIONS
 
 **Cover Letter Template - Technical Details Section:**
-```
-My technical expertise aligns perfectly with [Company]'s Android development needs:
-
-• Modern Android Development: I've implemented [specific technology from job posting] in [previous project], resulting in [measurable outcome]. My experience with Jetpack Compose has enabled me to create [specific UI benefit].
-
-• Architecture Expertise: At [Previous Company], I led the implementation of Clean Architecture with MVVM presentation layer, resulting in a 40% reduction in bug reports and significantly improved development velocity.
-
-• Performance Optimization: I reduced app startup time by 65% by implementing [specific technique], and optimized memory usage across complex screens with large datasets.
-
-• Leadership: I've mentored junior developers through architecture design sessions and code reviews, helping them grow into independent contributors capable of leading feature development.
-```
+\`\`\`
+${coverLetterTemplate}
+\`\`\`
 
 **Application Customization Checklist:**
 For each application, customize:
@@ -874,34 +913,14 @@ Prepare:
 6. Implement offline-first architecture with Room
 
 **Behavioral Interview Response Example (STAR Method):**
-```
-Question: Tell me about a challenging project and how you overcame obstacles.
-
-Situation: At [Company], we needed to redesign our e-commerce app which had grown organically and suffered from performance issues, crashes, and poor user experience. It had a 3.2 star rating and increasing user complaints.
-
-Task: As Senior Android Developer, I was tasked with leading the architectural redesign while maintaining feature parity and minimizing disruption for our 500,000 monthly active users.
-
-Action:
-1. Conducted comprehensive analysis of performance bottlenecks using Android Profiler
-2. Created migration plan with phased approach to reduce risk
-3. Implemented Clean Architecture with clear separation of concerns
-4. Rebuilt core components using modern Jetpack libraries
-5. Set up comprehensive testing suite with unit, integration and UI tests
-6. Mentored team of 4 developers through the transition
-7. Implemented feature flags to gradually roll out changes
-
-Result: After 4 months, we successfully relaunched with:
-- 85% crash reduction
-- 74% faster app startup
-- 40% reduction in ANR reports
-- App store rating improved from 3.2 to 4.6 stars
-- Development velocity increased with new features shipping 30% faster
-```
+\`\`\`
+${starMethodExample}
+\`\`\`
 
 ### SALARY NEGOTIATION PREPARATION
 
 **Salary Negotiation Script:**
-```
+\`\`\`
 "Thank you for the offer. I'm excited about the opportunity to join [Company] and contribute to [specific project/product].
 
 Based on my research into the market rates for senior Android developers with my experience level, and considering my specific expertise in [key skills that match their needs], I was hoping for a base salary closer to [target salary range].
@@ -910,27 +929,12 @@ My background in [specific valuable skill from job description] and track record
 
 [If they can't meet salary requirements]
 "I understand there may be constraints on the compensation. Perhaps we could discuss other components of the package, such as signing bonus, equity, or performance bonuses that might help bridge the gap?"
-```
+\`\`\`
 
 **30-60-90 Day Plan Example - Entry Section:**
-```
-# My 30-60-90 Day Plan as Senior Android Developer at [Company]
-
-## First 30 Days: Learning & Integration
-- Complete comprehensive onboarding process and set up development environment
-- Build and run all existing Android applications
-- Review architecture documentation and understand current codebase structure
-- Meet with all team members and key stakeholders to understand roles and workflows
-- Identify immediate pain points in the development process or codebase
-- Begin contributing by fixing 3-5 small bugs to understand development workflow
-- Document findings and create initial improvement proposals
-
-SPECIFIC MEASURABLE GOALS:
-1. Complete setup of all development tools and gain access to necessary systems
-2. Successfully push at least 3 bug fixes to production
-3. Create comprehensive documentation of current architecture and workflows
-4. Identify at least 2 quick wins for improving development process
-```
+\`\`\`
+${dayPlanTemplate}
+\`\`\`
 
 ## ACTION PLAN SUMMARY
 
