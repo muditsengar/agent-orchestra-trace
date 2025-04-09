@@ -1,0 +1,97 @@
+
+# Real AutoGen Integration Guide
+
+## Step 1: Get an OpenAI API Key
+
+1. Go to https://platform.openai.com/signup
+2. Create an account or sign in to your existing account
+3. Navigate to https://platform.openai.com/api-keys
+4. Click "Create new secret key"
+5. Give your key a name (e.g., "AutoGen Integration")
+6. Copy and save your API key securely - **you won't be able to view it again!**
+
+## Step 2: Setting Up the Python Backend
+
+### Prerequisites:
+- Python 3.10 or newer: https://www.python.org/downloads/
+- pip (Python package manager)
+
+### Installation Steps:
+
+1. Clone this repository or download the project files
+2. Navigate to the project directory in your terminal/command prompt
+3. Create a Python virtual environment:
+   ```
+   python -m venv autogen-env
+   ```
+4. Activate the virtual environment:
+   - Windows: `autogen-env\Scripts\activate`
+   - macOS/Linux: `source autogen-env/bin/activate`
+5. Install dependencies:
+   ```
+   pip install fastapi uvicorn pyautogen python-dotenv websockets
+   ```
+
+## Step 3: Configure Environment Variables
+
+1. Create a `.env` file in the backend directory with the following content:
+   ```
+   OPENAI_API_KEY=your_openai_api_key_here
+   ```
+2. Replace `your_openai_api_key_here` with the actual API key you obtained in Step 1
+
+## Step 4: Starting the Backend Server
+
+1. Make sure your virtual environment is activated
+2. Run the backend server:
+   ```
+   uvicorn main:app --reload
+   ```
+3. The server will start on http://localhost:8000 by default
+
+## Step 5: Running the Frontend Application
+
+1. In a separate terminal, navigate to the project directory
+2. Install frontend dependencies (if not already done):
+   ```
+   npm install
+   ```
+3. Start the frontend development server:
+   ```
+   npm start
+   ```
+4. The application should now be running with a real AutoGen integration
+
+## Understanding the Backend Components
+
+The backend consists of:
+
+1. FastAPI server: Provides RESTful endpoints and WebSocket connections
+2. AutoGen integration: Sets up multi-agent systems using Microsoft's AutoGen framework
+3. WebSocket server: Provides real-time communication between agents and frontend
+
+## Troubleshooting
+
+If you encounter issues:
+
+1. Verify your OpenAI API key is valid and has sufficient credits
+2. Check that both backend and frontend servers are running
+3. Look for error messages in the terminal running the backend server
+4. Ensure your environment variables are properly configured
+
+## Next Steps
+
+After basic AutoGen integration is working:
+- Integrate LangChain for enhanced information retrieval
+- Add Rasa for more sophisticated conversational capabilities
+- Implement database storage for conversation history
+
+## Hosting Options (Free Tier)
+
+For demo purposes, you can deploy on:
+- Render.com (Free tier available)
+- Railway.app (Limited free tier available)
+- Fly.io (Generous free tier)
+- PythonAnywhere (Free tier with limitations)
+
+Each of these platforms offers free deployment options that would be sufficient for demonstration purposes.
