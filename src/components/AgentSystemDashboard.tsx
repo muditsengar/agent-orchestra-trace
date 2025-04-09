@@ -7,6 +7,7 @@ import AgentMessage from './AgentMessage';
 import TraceItem from './TraceItem';
 import TaskItem from './TaskItem';
 import RequestForm from './RequestForm';
+import DirectAgentCommunication from './DirectAgentCommunication';
 import { agentService } from '../services/agentService';
 import { Message, Trace, AgentTask } from '../types/agent';
 
@@ -15,6 +16,7 @@ const AgentSystemDashboard: React.FC = () => {
   const [traces, setTraces] = useState<Trace[]>([]);
   const [tasks, setTasks] = useState<AgentTask[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>("multi-agent");
 
   // Update data when the agent service updates
   useEffect(() => {
@@ -58,21 +60,34 @@ const AgentSystemDashboard: React.FC = () => {
             <CardHeader className="pb-2">
               <CardTitle>Multi-Agent Orchestration</CardTitle>
               <CardDescription>
-                Submit a complex request and watch our agent system collaborate to solve it
+                Interact with our multi-agent system
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <RequestForm 
-                onRequestSubmitted={() => {
-                  // Scroll to the bottom of messages after submission
-                  setTimeout(() => {
-                    const messageContainers = document.querySelectorAll('.messages-container');
-                    messageContainers.forEach(container => {
-                      container.scrollTop = container.scrollHeight;
-                    });
-                  }, 100);
-                }} 
-              />
+              <Tabs defaultValue="multi-agent" value={activeTab} onValueChange={setActiveTab}>
+                <TabsList className="grid w-full grid-cols-2 mb-3">
+                  <TabsTrigger value="multi-agent">Multi-Agent Request</TabsTrigger>
+                  <TabsTrigger value="direct-agent">Direct Agent Communication</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="multi-agent" className="mt-0">
+                  <RequestForm 
+                    onRequestSubmitted={() => {
+                      // Scroll to the bottom of messages after submission
+                      setTimeout(() => {
+                        const messageContainers = document.querySelectorAll('.messages-container');
+                        messageContainers.forEach(container => {
+                          container.scrollTop = container.scrollHeight;
+                        });
+                      }, 100);
+                    }} 
+                  />
+                </TabsContent>
+                
+                <TabsContent value="direct-agent" className="mt-0">
+                  <DirectAgentCommunication />
+                </TabsContent>
+              </Tabs>
             </CardContent>
           </Card>
 
