@@ -13,15 +13,19 @@ This project lets you see these robots working together in real-time! You can as
 
 ## How does it work?
 
-1. You type a question in the box at the top of the screen
-2. The team leader (Coordinator) reads your question
-3. The leader asks the researcher to find information about your question
-4. The researcher shares what it found with the planner
-5. The planner creates a step-by-step plan
-6. The executor takes the plan and creates your answer
-7. Finally, you get a helpful response to your question!
+When using real AI frameworks (not simulations):
 
-The cool part is that you can see ALL of this happening on the screen as the robots talk to each other!
+1. You type a question in the box at the top of the screen
+2. Your question is sent to a special computer program called a "backend"
+3. The backend uses real AI systems like Microsoft AutoGen to create a team of AI helpers
+4. These AI helpers work together to solve your problem, just like real people would:
+   - They share information with each other
+   - They break big problems into smaller steps
+   - They check each other's work
+5. The backend sends all their conversations and answers back to your screen
+6. You can watch the entire process happening in real-time!
+
+The cool part is that these are REAL AI systems talking to each other, not pre-programmed responses!
 
 ## What are all those panels on the screen?
 
@@ -41,75 +45,87 @@ The screen is split into three main areas:
 
 ## What technology makes this work?
 
-Think of this project like a digital dollhouse:
+For a real integration (not simulation):
 
-- **React**: The building blocks that create all the parts you see
-- **TypeScript**: Special instructions that make sure each block fits perfectly
-- **Tailwind CSS**: The paint and decorations that make everything look nice
-- **shadcn/ui**: Pre-built furniture pieces that save time
+1. **Frontend** - What you see on your screen:
+   - React: The building blocks that create all the parts you see
+   - TypeScript: Special instructions that make sure each block fits perfectly
+   - Tailwind CSS: The paint and decorations that make everything look nice
+   - shadcn/ui: Pre-built furniture pieces that save time
+
+2. **Backend** - The "brain" running behind the scenes:
+   - Python: The language that powers the AI systems
+   - Microsoft AutoGen: The real AI framework that creates the team of helpers
+   - API Server: A special messenger that connects the frontend to the backend
+
+3. **Communication**:
+   - API Calls: Messages that go back and forth between what you see (frontend) and the AI brain (backend)
+   - WebSockets: Special connections that allow real-time updates
 
 ## Why is this project special?
 
-Most computer programs hide how they work - like a magic trick. This project is special because it shows you exactly how the robots think and work together:
+Most AI systems work like a black box - you ask a question and get an answer, but you can't see how the AI figured it out. This project is special because:
 
-- You can see which robot is working on what
-- You can read the messages they send to each other
-- You can watch as they break down big problems into smaller steps
-- You can understand how they create the final answer
+1. It uses real AI frameworks like Microsoft AutoGen, not simulations
+2. It shows you exactly how multiple AI agents collaborate to solve problems
+3. You can watch the entire process happening in real-time
+4. You can understand how the AI reached its final answer
 
-It's like having a window into the robot's brains!
+It's like having a window into the AI's thought process!
 
 ## What can I ask the robots?
 
-You can ask the robots all kinds of questions:
-- Help planning a project
-- Advice for learning something new
-- Ideas for solving a problem
-- Help creating a schedule or plan
+With real AI frameworks (not simulations), you can ask about almost anything:
+- Help with complex problems
+- Creative ideas and brainstorming
+- Research on different topics
+- Step-by-step instructions
+- Analysis of information
 
-The robots work best with questions that need multiple steps to answer. Simple questions don't need the whole team!
+The multi-agent system is especially good at breaking down complex tasks into manageable steps.
 
 ## Why are there different "frameworks"?
 
-The project lets you choose different "styles" of robot teams:
+Different AI frameworks have different strengths:
 
-- **Native**: The default robot team built into the project
-- **AutoGen**: A special team made by Microsoft
-- **LangChain**: A popular robot team style
-- **Rasa**: A robot team that's good at conversations
+- **Microsoft AutoGen**: Great at creating conversational AI teams that work together
+- **LangChain**: Excellent at connecting AI to different sources of information
+- **Rasa**: Specialized in understanding natural language conversations
 
-Different teams have different strengths, so you can pick the one that works best for your question!
+Each framework has its own approach to solving problems, so you can pick the one that works best for your question!
 
-## What happens after I submit a question?
+## What happens behind the scenes?
 
-1. Your question appears in the conversation area
-2. The robots start sending messages to each other
-3. Tasks are created and assigned to different robots
-4. You can see each robot's thoughts in the middle panel
-5. As robots complete their tasks, you'll see progress updates
-6. When all the work is done, you get your answer!
+With real AI integration:
 
-All of this happens right on the screen where you can watch it!
+1. Your question goes to the backend server
+2. The backend creates a team of AI agents using Microsoft AutoGen
+3. Each agent has different capabilities and roles
+4. The agents communicate with each other through structured messages
+5. They work together to solve your problem, just like human experts would
+6. All their conversations and thinking steps are sent back to your screen
+7. You receive the final answer, along with the entire process that created it
 
 ## Is this magic?
 
-It's not magic - it's just technology that's usually hidden being made visible! The robots are using artificial intelligence to:
+It's not magic - it's advanced artificial intelligence! Unlike simulated responses, real AI frameworks:
 
-1. Understand what you're asking
-2. Break down problems into smaller pieces
-3. Find relevant information
-4. Create helpful plans
-5. Write clear answers
+1. Use large language models (like GPT-4) to power each agent
+2. Have sophisticated ways to structure agent conversations
+3. Can actually reason through complex problems
+4. Generate unique responses based on your specific questions
+5. Are constantly learning and improving
 
-This project just lets you see all those steps happening, instead of hiding them!
+This project makes these powerful AI systems visible and accessible to you!
 
 ## Why was this project created?
 
 This project was created to:
-1. Help people understand how AI works together to solve problems
-2. Make AI more trustworthy by showing its thinking process
-3. Show how different AI systems can work together
-4. Make it easier to see where AI might make mistakes
-5. Create a fun way to learn about AI collaboration!
+1. Show how real multi-agent AI systems work together
+2. Make complex AI more transparent and understandable
+3. Demonstrate the power of frameworks like Microsoft AutoGen
+4. Help people learn about advanced AI collaboration
+5. Create a fun and interactive way to use cutting-edge AI technology
 
-Think of it as lifting the curtain on AI to see how it all works behind the scenes!
+Think of it as a showcase for the next generation of AI applications!
+
