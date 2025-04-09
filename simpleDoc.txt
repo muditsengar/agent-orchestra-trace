@@ -1,0 +1,115 @@
+
+# Multi-Agent Collaboration System: Simple Explanation
+
+## What is this project?
+
+Imagine a team of robot helpers that work together to solve problems. Each robot has a special job:
+- One robot is the team leader (Coordinator)
+- One robot is really good at finding information (Researcher)
+- One robot is great at making plans (Planner)
+- One robot is excellent at creating solutions (Executor)
+
+This project lets you see these robots working together in real-time! You can ask them a question and watch how they talk to each other, share information, and solve your problem step by step.
+
+## How does it work?
+
+1. You type a question in the box at the top of the screen
+2. The team leader (Coordinator) reads your question
+3. The leader asks the researcher to find information about your question
+4. The researcher shares what it found with the planner
+5. The planner creates a step-by-step plan
+6. The executor takes the plan and creates your answer
+7. Finally, you get a helpful response to your question!
+
+The cool part is that you can see ALL of this happening on the screen as the robots talk to each other!
+
+## What are all those panels on the screen?
+
+The screen is split into three main areas:
+
+1. **Left Side (Big Area)**
+   - At the top: Where you type your question
+   - Below that: The conversation between you and the robots
+
+2. **Middle Area**
+   - Shows what each robot is thinking about
+   - Shows the tasks each robot is working on
+
+3. **Right Side**
+   - Shows how the robots talk to each other
+   - Like seeing their "behind the scenes" conversations
+
+## What technology makes this work?
+
+Think of this project like a digital dollhouse:
+
+- **React**: The building blocks that create all the parts you see
+- **TypeScript**: Special instructions that make sure each block fits perfectly
+- **Tailwind CSS**: The paint and decorations that make everything look nice
+- **shadcn/ui**: Pre-built furniture pieces that save time
+
+## Why is this project special?
+
+Most computer programs hide how they work - like a magic trick. This project is special because it shows you exactly how the robots think and work together:
+
+- You can see which robot is working on what
+- You can read the messages they send to each other
+- You can watch as they break down big problems into smaller steps
+- You can understand how they create the final answer
+
+It's like having a window into the robot's brains!
+
+## What can I ask the robots?
+
+You can ask the robots all kinds of questions:
+- Help planning a project
+- Advice for learning something new
+- Ideas for solving a problem
+- Help creating a schedule or plan
+
+The robots work best with questions that need multiple steps to answer. Simple questions don't need the whole team!
+
+## Why are there different "frameworks"?
+
+The project lets you choose different "styles" of robot teams:
+
+- **Native**: The default robot team built into the project
+- **AutoGen**: A special team made by Microsoft
+- **LangChain**: A popular robot team style
+- **Rasa**: A robot team that's good at conversations
+
+Different teams have different strengths, so you can pick the one that works best for your question!
+
+## What happens after I submit a question?
+
+1. Your question appears in the conversation area
+2. The robots start sending messages to each other
+3. Tasks are created and assigned to different robots
+4. You can see each robot's thoughts in the middle panel
+5. As robots complete their tasks, you'll see progress updates
+6. When all the work is done, you get your answer!
+
+All of this happens right on the screen where you can watch it!
+
+## Is this magic?
+
+It's not magic - it's just technology that's usually hidden being made visible! The robots are using artificial intelligence to:
+
+1. Understand what you're asking
+2. Break down problems into smaller pieces
+3. Find relevant information
+4. Create helpful plans
+5. Write clear answers
+
+This project just lets you see all those steps happening, instead of hiding them!
+
+## Why was this project created?
+
+This project was created to:
+1. Help people understand how AI works together to solve problems
+2. Make AI more trustworthy by showing its thinking process
+3. Show how different AI systems can work together
+4. Make it easier to see where AI might make mistakes
+5. Create a fun way to learn about AI collaboration!
+
+Think of it as lifting the curtain on AI to see how it all works behind the scenes!
