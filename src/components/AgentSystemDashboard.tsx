@@ -50,11 +50,12 @@ const AgentSystemDashboard: React.FC = () => {
   );
 
   return (
-    <div className="container mx-auto py-6 max-w-6xl">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="md:col-span-2 space-y-6">
-          <Card>
-            <CardHeader>
+    <div className="container-fluid px-0 py-4 max-w-full text-[90%]">
+      <div className="grid grid-cols-4 gap-3">
+        {/* Multi-agent input and conversation - 50% width */}
+        <div className="col-span-2 space-y-3">
+          <Card className="w-full">
+            <CardHeader className="pb-2">
               <CardTitle>Multi-Agent Orchestration</CardTitle>
               <CardDescription>
                 Submit a complex request and watch our agent system collaborate to solve it
@@ -75,18 +76,18 @@ const AgentSystemDashboard: React.FC = () => {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="pb-3">
+          <Card className="w-full">
+            <CardHeader className="pb-2">
               <CardTitle>Conversation</CardTitle>
               <CardDescription>
                 User requests and agent responses
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ScrollArea className="h-[400px] messages-container">
-                <div className="space-y-4 p-1">
+              <ScrollArea className="h-[500px] messages-container">
+                <div className="space-y-3 p-1">
                   {conversationMessages.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">
+                    <div className="text-center py-6 text-gray-500">
                       No messages yet. Submit a request to begin the conversation.
                     </div>
                   ) : (
@@ -96,7 +97,7 @@ const AgentSystemDashboard: React.FC = () => {
                   )}
                   {isProcessing && (
                     <div className="text-center py-2">
-                      <div className="inline-block px-4 py-2 bg-gray-100 rounded-full text-sm">
+                      <div className="inline-block px-3 py-1 bg-gray-100 rounded-full text-sm">
                         Agents are working...
                       </div>
                     </div>
@@ -107,26 +108,27 @@ const AgentSystemDashboard: React.FC = () => {
           </Card>
         </div>
 
-        <div className="space-y-6">
-          <Card>
-            <CardHeader className="pb-3">
+        {/* Agent Traces - 25% width */}
+        <div className="col-span-1">
+          <Card className="h-full">
+            <CardHeader className="pb-2">
               <CardTitle>Agent Traces</CardTitle>
               <CardDescription>
-                Real-time logs from the multi-agent system
+                Real-time logs from the system
               </CardDescription>
             </CardHeader>
             <CardContent>
               <Tabs defaultValue="traces">
-                <TabsList className="grid w-full grid-cols-2 mb-4">
+                <TabsList className="grid w-full grid-cols-2 mb-3">
                   <TabsTrigger value="traces">Traces</TabsTrigger>
                   <TabsTrigger value="tasks">Tasks</TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="traces" className="mt-0">
-                  <ScrollArea className="h-[500px] messages-container">
+                  <ScrollArea className="h-[600px] messages-container">
                     <div className="space-y-1 p-1">
                       {traces.length === 0 ? (
-                        <div className="text-center py-8 text-gray-500">
+                        <div className="text-center py-6 text-gray-500">
                           No traces yet. Submit a request to begin.
                         </div>
                       ) : (
@@ -139,10 +141,10 @@ const AgentSystemDashboard: React.FC = () => {
                 </TabsContent>
                 
                 <TabsContent value="tasks" className="mt-0">
-                  <ScrollArea className="h-[500px]">
-                    <div className="space-y-3 p-1">
+                  <ScrollArea className="h-[600px]">
+                    <div className="space-y-2 p-1">
                       {tasks.length === 0 ? (
-                        <div className="text-center py-8 text-gray-500">
+                        <div className="text-center py-6 text-gray-500">
                           No tasks yet. Submit a request to begin.
                         </div>
                       ) : (
@@ -156,19 +158,22 @@ const AgentSystemDashboard: React.FC = () => {
               </Tabs>
             </CardContent>
           </Card>
-          
-          <Card>
-            <CardHeader className="pb-3">
+        </div>
+        
+        {/* Internal Communications - 25% width */}
+        <div className="col-span-1">
+          <Card className="h-full">
+            <CardHeader className="pb-2">
               <CardTitle>Internal Communications</CardTitle>
               <CardDescription>
-                Messages exchanged between agents
+                Messages between agents
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ScrollArea className="h-[200px] messages-container">
-                <div className="space-y-3 p-1">
+              <ScrollArea className="h-[600px] messages-container">
+                <div className="space-y-2 p-1">
                   {internalMessages.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">
+                    <div className="text-center py-6 text-gray-500">
                       No internal communications yet. Submit a request to begin.
                     </div>
                   ) : (
