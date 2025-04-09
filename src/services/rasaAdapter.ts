@@ -481,7 +481,7 @@ This comprehensive 30-day plan emphasizes consistent daily progress across multi
 
 #### Senior Android Developer Resume Template:
 
-```
+\`\`\`
 YOUR NAME
 email@domain.com | LinkedIn URL | GitHub URL | Portfolio URL | Phone
 
@@ -518,7 +518,7 @@ PROJECT NAME | github.com/yourname/project
 
 EDUCATION
 University Name | Degree | Year
-```
+\`\`\`
 
 ### DAY 3-4: ONLINE PRESENCE
 
@@ -527,7 +527,7 @@ University Name | Degree | Year
 * "Mobile Engineering Leader | Android Architecture Specialist | Creating Exceptional User Experiences"
 
 #### GitHub README Template:
-```markdown
+\`\`\`markdown
 # Project Name
 
 ## Overview
@@ -550,7 +550,7 @@ This application follows Clean Architecture with MVVM presentation layer:
 
 ## Getting Started
 Instructions for building and running the project
-```
+\`\`\`
 
 ### DAY 5: TECHNICAL REFRESHER
 
@@ -572,7 +572,7 @@ Create a simple task list app with these requirements:
 ### DAY 6: MARKET RESEARCH
 
 #### Company Research Template:
-```
+\`\`\`
 COMPANY: [Name]
 Size: [Employees]
 Funding: [Status/Amount]
@@ -584,12 +584,12 @@ Recent News: [Company developments in last 6 months]
 Potential Connections: [People you know who work there]
 Culture Notes: [Work environment, values]
 Why I'm Interested: [Specific reasons]
-```
+\`\`\`
 
 ### DAY 7: NETWORK ACTIVATION
 
 #### Outreach Template (Former Colleague):
-```
+\`\`\`
 Subject: Reconnecting and Quick Career Question
 
 Hi [Name],
@@ -604,7 +604,7 @@ Would you be available for a brief chat on [suggest 2-3 dates/times]?
 
 Best,
 [Your Name]
-```
+\`\`\`
 
 ## WEEK 2 IMPLEMENTATION EXAMPLES
 
@@ -629,7 +629,7 @@ Technical requirements:
 ### DAY 10: COVER LETTER
 
 #### Modular Cover Letter Structure:
-```
+\`\`\`
 [Hiring Manager Name]
 [Company Name]
 [Date]
@@ -653,7 +653,7 @@ I welcome the opportunity to discuss how my experience and passion for Android d
 
 Sincerely,
 [Your Name]
-```
+\`\`\`
 
 ### DAY 11-13: JOB SEARCH CHANNELS & INITIAL APPLICATIONS
 
@@ -667,7 +667,7 @@ Create a scoring system (1-5) for each opportunity:
 6. Career growth opportunities
 
 #### Follow-up Email Template (1 Week After Application):
-```
+\`\`\`
 Subject: Following Up - Senior Android Developer Application
 
 Dear [Name/Hiring Manager],
@@ -684,7 +684,7 @@ Best regards,
 [Your Name]
 [Phone]
 [LinkedIn URL]
-```
+\`\`\`
 
 ### DAY 14-16: TECHNICAL INTERVIEW PREP
 
@@ -720,7 +720,7 @@ Prepare:
 ### DAY 17-20: APPLICATIONS & INTERVIEW PREP
 
 #### STAR Method Answer Template for Behavioral Questions:
-```
+\`\`\`
 Question: Tell me about a time you solved a difficult technical problem.
 
 Situation: At [Company], we faced severe performance issues with our Android app's startup time, which had grown to over 6 seconds on mid-tier devices. This was causing increased abandonment rates during app launches.
@@ -739,7 +739,7 @@ Action: I:
 6. Added startup sequence optimization
 
 Result: Startup time was reduced from 6.2 seconds to 2.3 seconds (63% improvement), exceeding our target. User abandonment during startup dropped by 47%, directly impacting our key retention metrics. The techniques I implemented became part of our team's best practices documentation.
-```
+\`\`\`
 
 #### Technical Contribution Example for LinkedIn:
 Write a short article (500-750 words) on "Optimizing Jetpack Compose Performance in Production Apps" or another topic showcasing your expertise.
@@ -749,7 +749,7 @@ Write a short article (500-750 words) on "Optimizing Jetpack Compose Performance
 ### DAY 25-26: INTERVIEW & NEGOTIATION PREP
 
 #### Salary Negotiation Script:
-```
+\`\`\`
 "Thank you for the offer. I'm very excited about the opportunity to join [Company] and contribute to [specific project/team].
 
 Based on my research and experience level, I was expecting a base salary in the range of $[target salary range]. My background in [specific valuable skills] and proven track record of [specific achievement relevant to role] align well with the requirements of this position.
@@ -758,10 +758,10 @@ Would you have flexibility to adjust the base salary to better reflect my experi
 
 [If they can't meet salary requirements]
 "I understand there may be constraints on the base salary. Perhaps we could discuss other components of the compensation package, such as equity, signing bonus, or performance bonuses that might help bridge the gap?"
-```
+\`\`\`
 
 #### 30-60-90 Day Plan Template:
-```markdown
+\`\`\`markdown
 # My 30-60-90 Day Plan as Senior Android Developer
 
 ## First 30 Days: Learning & Integration
@@ -787,7 +787,7 @@ Would you have flexibility to adjust the base salary to better reflect my experi
 - Propose long-term technical roadmap improvements
 - Establish automation for repeated manual processes
 - Create metrics for tracking Android app quality and performance
-```
+\`\`\`
 
 ### DAY 30: PROGRESS REVIEW
 
@@ -979,4 +979,3 @@ This implementation guide provides specific, actionable examples and templates f
 }
 
 export const rasaAdapter = RasaAdapter.getInstance();
-
