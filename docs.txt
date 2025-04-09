@@ -1,0 +1,78 @@
+## Code Documentation
+
+### Code Architecture
+
+```
+src/
+├── components/      # UI components for the application
+│   ├── ui/          # Base UI components from shadcn/ui
+│   ├── AgentMessage.tsx      # Message display component
+│   ├── AgentSystemDashboard.tsx  # Main dashboard UI
+│   ├── RequestForm.tsx       # User input form
+│   ├── TaskItem.tsx          # Task visualization
+│   └── TraceItem.tsx         # Trace visualization
+├── data/
+│   └── agents.ts    # Agent definitions and configurations
+├── hooks/           # Custom React hooks
+├── lib/             # Utility functions and helpers
+├── pages/
+│   └── Index.tsx    # Main application page
+├── services/
+│   ├── agentService.ts     # Core agent orchestration logic
+│   ├── autogenAdapter.ts   # Microsoft AutoGen framework adapter
+│   └── rasaAdapter.ts      # Rasa framework adapter
+└── types/
+    └── agent.ts     # TypeScript interfaces for the system
+```
+
+### Core Data Models
+
+- **Agent**: Represents an AI agent with a specific role (researcher, planner, executor, coordinator)
+- **Message**: Communication between agents or user-agent interactions
+- **Trace**: Detailed logs of agent actions and reasoning
+- **AgentTask**: Work items assigned to agents with status tracking
+- **UserRequest**: Incoming requests from users with processing status
+
+### Application Flow
+
+1. **Request Submission**:
+   - User submits a request via the `RequestForm` component
+   - Request is passed to the `agentService.submitUserRequest()` method
+   - A new `UserRequest` object is created and stored
+
+2. **Framework Selection & Processing**:
+   - Based on the active framework setting (native, autogen, langchain, rasa)
+   - The appropriate processing method is called:
+     - `processWithAutogen()` for Microsoft AutoGen integration
+     - `processWithRasa()` for Rasa integration
+     - `simulateLangChainProcess()` for LangChain simulation
+     - `simulateAgentCollaboration()` for native processing
+
+3. **Agent Collaboration Process**:
+   - **Coordinator** receives the request and analyzes it
+   - Tasks are created and assigned to specialized agents
+   - **Researcher** gathers information and returns findings
+   - **Planner** creates execution plan based on research
+   - **Executor** implements the plan and generates response
+   - **Coordinator** reviews and delivers the final solution
+
+4. **Real-time Updates**:
+   - `AgentSystemDashboard` component registers update callbacks
+   - When agents create messages, traces, or tasks, UI updates instantly
+   - All communication is displayed in dedicated panels
+
+### Technical Implementation
+
+- **State Management**: Uses React's useState and useEffect with a custom event system
+- **UI Updates**: Components subscribe to the agentService for real-time updates
+- **Agent Communication**: Structured message passing with metadata
+- **Trace Visualization**: Chronological display of agent reasoning steps
+- **Task Tracking**: Status updates for work items with parent-child relationships
+- **Framework Adapters**: Pluggable architecture for different AI frameworks
+
+### Extending the System
+
+- **Add New Agent Types**: Extend the `AgentRole` type and create new agent definitions
+- **Implement New Frameworks**: Create new adapter services and processing methods
+- **Enhance Agent Capabilities**: Modify agent behavior in the service implementation
+- **Add Persistence**: Implement database storage for messages, traces, and tasks

@@ -1,5 +1,5 @@
 
-# Agent Orchestra Trace
+# Multi Agent Collaboration_Mudit
 
 Real-time multi-agent collaboration system with detailed tracing capabilities. This project demonstrates how multiple specialized AI agents can collaborate to solve complex tasks while providing transparency into their decision-making and communication processes.
 
@@ -37,13 +37,13 @@ The system provides real-time visualization of agent communication, task delegat
 - Local state with React hooks
 - Custom event-based state synchronization
 
-## Detailed Deployment Steps for Local Host
+## Setup & Usage
 
 Follow these steps to deploy the application locally:
 
 1. **Clone the repository**
    ```sh
-   git clone <your-repo-url>
+   git clone https://github.com/muditsengar/agent-orchestra-trace
    cd agent-orchestra-trace
    ```
 
@@ -61,7 +61,15 @@ Follow these steps to deploy the application locally:
 4. **Access the application**
    Open your browser and navigate to: `http://localhost:8080`
 
+5. **Using the application**
+   - Enter your request in the input field
+   - Watch as agents collaborate in real-time to solve your request
+   - View detailed traces of agent communication and reasoning
+   - Explore the task breakdown and status updates
+
 ## System Architecture
+
+The Agent Orchestra Trace system employs a multi-agent architecture with specialized roles and a structured communication flow to efficiently solve complex tasks.
 
 ### Agent Roles
 
@@ -79,15 +87,41 @@ Follow these steps to deploy the application locally:
 5. Executor generates the final comprehensive response
 6. Response is delivered to the user
 
-### Rapid AI Development
+### Framework Selection
 
-This project demonstrates rapid AI development practices:
+The system is built using:
+- **React with TypeScript**: For type-safe component development
+- **Vite**: For fast development and optimized builds
+- **Tailwind CSS**: For utility-first styling
+- **shadcn/ui**: For accessible, customizable UI components
+- **Event-based architecture**: For real-time agent communication
 
-- **Component-Based Architecture**: Small, reusable components accelerate development
-- **Simulated AI Framework**: Realistic simulation of AI agent behaviors without needing to integrate with external APIs
-- **Tailwind CSS**: Utility-first CSS framework eliminates the need for custom CSS
-- **shadcn/ui Components**: Pre-built UI components reduce development time
-- **AI-Assisted Development**: The project was developed using AI coding assistants to scaffold components, generate boilerplate code, and ensure best practices
+## AI Coding & Speed
+
+This project leverages AI coding tools and modern development practices to accelerate the development process:
+
+- **AI-Assisted Development**: The project was developed using AI coding assistants like Cursor AI, Windsurf AI and Loveable vide coding to:
+  - Scaffold components and generate boilerplate code
+  - Suggest optimizations and best practices
+  - Debug complex interactions between components
+  - Generate TypeScript interfaces and type definitions
+
+- **Development Automation**:
+  - Vite's hot module replacement for instant feedback
+  - ESLint and Prettier for automated code quality enforcement
+  - TypeScript for catching type errors during development
+  - Automated component generation with shadcn/ui CLI
+
+- **Rapid Prototyping Techniques**:
+  - Component-Based Architecture: Small, reusable components accelerate development
+  - Simulated AI Framework: Realistic simulation of AI agent behaviors without external API integration
+  - Tailwind CSS: Utility-first CSS framework eliminates the need for custom CSS
+  - shadcn/ui Components: Pre-built UI components reduce development time
+
+- **Development Velocity**:
+  - Initial prototype completed in under 48 hours
+  - Iterative development with continuous feedback incorporation
+  - Parallel development of UI and agent logic
 
 ### Technical Depth
 
@@ -134,3 +168,83 @@ Agents in this system communicate through a centralized message-passing architec
 5. Tasks track the status of work assigned to each agent
 
 All communication is logged and visualized in real-time, providing transparency into the collaborative problem-solving process.
+
+## Code Documentation
+
+### Code Architecture
+
+```
+src/
+├── components/      # UI components for the application
+│   ├── ui/          # Base UI components from shadcn/ui
+│   ├── AgentMessage.tsx      # Message display component
+│   ├── AgentSystemDashboard.tsx  # Main dashboard UI
+│   ├── RequestForm.tsx       # User input form
+│   ├── TaskItem.tsx          # Task visualization
+│   └── TraceItem.tsx         # Trace visualization
+├── data/
+│   └── agents.ts    # Agent definitions and configurations
+├── hooks/           # Custom React hooks
+├── lib/             # Utility functions and helpers
+├── pages/
+│   └── Index.tsx    # Main application page
+├── services/
+│   ├── agentService.ts     # Core agent orchestration logic
+│   ├── autogenAdapter.ts   # Microsoft AutoGen framework adapter
+│   └── rasaAdapter.ts      # Rasa framework adapter
+└── types/
+    └── agent.ts     # TypeScript interfaces for the system
+```
+
+### Core Data Models
+
+- **Agent**: Represents an AI agent with a specific role (researcher, planner, executor, coordinator)
+- **Message**: Communication between agents or user-agent interactions
+- **Trace**: Detailed logs of agent actions and reasoning
+- **AgentTask**: Work items assigned to agents with status tracking
+- **UserRequest**: Incoming requests from users with processing status
+
+### Application Flow
+
+1. **Request Submission**:
+   - User submits a request via the `RequestForm` component
+   - Request is passed to the `agentService.submitUserRequest()` method
+   - A new `UserRequest` object is created and stored
+
+2. **Framework Selection & Processing**:
+   - Based on the active framework setting (native, autogen, langchain, rasa)
+   - The appropriate processing method is called:
+     - `processWithAutogen()` for Microsoft AutoGen integration
+     - `processWithRasa()` for Rasa integration
+     - `simulateLangChainProcess()` for LangChain simulation
+     - `simulateAgentCollaboration()` for native processing
+
+3. **Agent Collaboration Process**:
+   - **Coordinator** receives the request and analyzes it
+   - Tasks are created and assigned to specialized agents
+   - **Researcher** gathers information and returns findings
+   - **Planner** creates execution plan based on research
+   - **Executor** implements the plan and generates response
+   - **Coordinator** reviews and delivers the final solution
+
+4. **Real-time Updates**:
+   - `AgentSystemDashboard` component registers update callbacks
+   - When agents create messages, traces, or tasks, UI updates instantly
+   - All communication is displayed in dedicated panels
+
+### Technical Implementation
+
+- **State Management**: Uses React's useState and useEffect with a custom event system
+- **UI Updates**: Components subscribe to the agentService for real-time updates
+- **Agent Communication**: Structured message passing with metadata
+- **Trace Visualization**: Chronological display of agent reasoning steps
+- **Task Tracking**: Status updates for work items with parent-child relationships
+- **Framework Adapters**: Pluggable architecture for different AI frameworks
+
+### Extending the System
+
+- **Add New Agent Types**: Extend the `AgentRole` type and create new agent definitions
+- **Implement New Frameworks**: Create new adapter services and processing methods
+- **Enhance Agent Capabilities**: Modify agent behavior in the service implementation
+- **Add Persistence**: Implement database storage for messages, traces, and tasks
+
