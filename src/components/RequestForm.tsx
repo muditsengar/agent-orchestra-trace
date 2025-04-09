@@ -2,11 +2,12 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '../components/ui/button';
 import { Textarea } from '../components/ui/textarea';
-import { Switch } from '../components/ui/switch';
+import { RadioGroup, RadioGroupItem } from '../components/ui/radio-group';
 import { Label } from '../components/ui/label';
 import { toast } from '@/components/ui/sonner';
 import { agentService } from '../services/agentService';
 import { autogenAdapter } from '../services/autogenAdapter';
+import { rasaAdapter } from '../services/rasaAdapter';
 
 interface RequestFormProps {
   onRequestSubmitted?: () => void;
@@ -15,26 +16,48 @@ interface RequestFormProps {
 const RequestForm: React.FC<RequestFormProps> = ({ onRequestSubmitted }) => {
   const [prompt, setPrompt] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [useAutogen, setUseAutogen] = useState(false);
+  const [framework, setFramework] = useState<'native' | 'autogen' | 'langchain' | 'rasa'>('native');
   const [autogenConnected, setAutogenConnected] = useState(false);
+  const [rasaConnected, setRasaConnected] = useState(false);
 
   useEffect(() => {
-    // Check if AutoGen backend is connected
-    const checkConnection = async () => {
-      const isConnected = await autogenAdapter.isBackendConnected();
-      setAutogenConnected(isConnected);
+    // Check if backends are connected
+    const checkConnections = async () => {
+      if (framework === 'autogen') {
+        const isConnected = await autogenAdapter.isBackendConnected();
+        setAutogenConnected(isConnected);
+        if (!isConnected) {
+          try {
+            const connected = await autogenAdapter.connect();
+            setAutogenConnected(connected);
+          } catch (error) {
+            console.error("Failed to connect to AutoGen:", error);
+          }
+        }
+      } else if (framework === 'rasa') {
+        const isConnected = await rasaAdapter.isBackendConnected();
+        setRasaConnected(isConnected);
+        if (!isConnected) {
+          try {
+            const connected = await rasaAdapter.connect();
+            setRasaConnected(connected);
+          } catch (error) {
+            console.error("Failed to connect to Rasa:", error);
+          }
+        }
+      }
     };
     
-    if (useAutogen) {
-      checkConnection();
-    }
-  }, [useAutogen]);
+    checkConnections();
+  }, [framework]);
 
-  const handleToggleAutogen = async (checked: boolean) => {
-    setUseAutogen(checked);
-    agentService.toggleAutogen(checked);
+  const handleFrameworkChange = async (value: 'native' | 'autogen' | 'langchain' | 'rasa') => {
+    setFramework(value);
     
-    if (checked && !autogenConnected) {
+    // Update the framework in the agent service
+    if (value === 'autogen') {
+      agentService.toggleAutogen(true);
+      
       try {
         const connected = await autogenAdapter.connect();
         setAutogenConnected(connected);
@@ -42,7 +65,42 @@ const RequestForm: React.FC<RequestFormProps> = ({ onRequestSubmitted }) => {
         console.error("Failed to connect to AutoGen:", error);
         toast.error("Failed to connect to AutoGen backend");
       }
+    } else if (value === 'langchain') {
+      agentService.toggleLangChain(true);
+      // LangChain is simulated, no backend connection needed
+    } else if (value === 'rasa') {
+      agentService.toggleRasa(true);
+      
+      try {
+        const connected = await rasaAdapter.connect();
+        setRasaConnected(connected);
+      } catch (error) {
+        console.error("Failed to connect to Rasa:", error);
+        toast.error("Failed to connect to Rasa backend");
+      }
+    } else {
+      // Native framework
+      agentService.setFramework('native');
     }
+  };
+
+  const getPlaceholderText = () => {
+    switch (framework) {
+      case 'autogen':
+        return "Ask for help with job search, career planning, technical problems, or any complex task (e.g., 'I need a comprehensive marketing strategy for my new app')";
+      case 'langchain':
+        return "Request detailed information with day-by-day breakdowns (e.g., 'Create a 30-day plan to learn web development from scratch')";
+      case 'rasa':
+        return "Ask for comprehensive plans with daily activities and detailed examples (e.g., 'I was laid off as a senior developer, help me plan and prepare for a new job')";
+      default:
+        return "Enter a complex task for our multi-agent system to solve collaboratively...";
+    }
+  };
+
+  const isBackendReadyCheck = () => {
+    if (framework === 'autogen' && !autogenConnected) return false;
+    if (framework === 'rasa' && !rasaConnected) return false;
+    return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -71,25 +129,36 @@ const RequestForm: React.FC<RequestFormProps> = ({ onRequestSubmitted }) => {
   return (
     <form onSubmit={handleSubmit} className="bg-white shadow-md rounded-lg p-4">
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <Switch 
-              id="autogen-mode"
-              checked={useAutogen}
-              onCheckedChange={handleToggleAutogen}
-            />
-            <Label htmlFor="autogen-mode" className="cursor-pointer">
-              Use Microsoft AutoGen
-            </Label>
-          </div>
-          {useAutogen && (
-            <div className="flex items-center">
-              <span className={`h-2 w-2 rounded-full mr-2 ${autogenConnected ? 'bg-green-500' : 'bg-amber-500'}`}></span>
-              <span className="text-xs text-gray-600">
-                {autogenConnected ? 'Connected' : 'Connecting...'}
-              </span>
+        <div className="mb-4">
+          <Label className="text-sm font-medium mb-2 block">Select Processing Framework</Label>
+          <RadioGroup 
+            value={framework} 
+            onValueChange={(value) => handleFrameworkChange(value as 'native' | 'autogen' | 'langchain' | 'rasa')}
+            className="flex flex-wrap gap-4"
+          >
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="native" id="native" />
+              <Label htmlFor="native" className="cursor-pointer">Native</Label>
             </div>
-          )}
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="autogen" id="autogen" />
+              <Label htmlFor="autogen" className="cursor-pointer">AutoGen</Label>
+              {framework === 'autogen' && (
+                <span className={`h-2 w-2 rounded-full ml-1 ${autogenConnected ? 'bg-green-500' : 'bg-amber-500'}`} />
+              )}
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="langchain" id="langchain" />
+              <Label htmlFor="langchain" className="cursor-pointer">LangChain</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="rasa" id="rasa" />
+              <Label htmlFor="rasa" className="cursor-pointer">Rasa</Label>
+              {framework === 'rasa' && (
+                <span className={`h-2 w-2 rounded-full ml-1 ${rasaConnected ? 'bg-green-500' : 'bg-amber-500'}`} />
+              )}
+            </div>
+          </RadioGroup>
         </div>
         
         <div>
@@ -98,16 +167,17 @@ const RequestForm: React.FC<RequestFormProps> = ({ onRequestSubmitted }) => {
           </label>
           <Textarea
             id="prompt"
-            placeholder={useAutogen 
-              ? "Ask for help with job search, career planning, technical problems, or any complex task (e.g., 'I need a comprehensive marketing strategy for my new app')" 
-              : "Enter a complex task for our multi-agent system to solve collaboratively..."}
+            placeholder={getPlaceholderText()}
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             className="w-full min-h-[80px]"
           />
         </div>
         <div className="flex justify-end">
-          <Button type="submit" disabled={isSubmitting || !prompt.trim() || (useAutogen && !autogenConnected)}>
+          <Button 
+            type="submit" 
+            disabled={isSubmitting || !prompt.trim() || !isBackendReadyCheck()}
+          >
             {isSubmitting ? 'Submitting...' : 'Submit Request'}
           </Button>
         </div>
