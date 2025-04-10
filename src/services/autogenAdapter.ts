@@ -1,4 +1,3 @@
-
 // This adapter integrates with Microsoft AutoGen through our Python backend
 import { v4 as uuidv4 } from 'uuid';
 import { Message, Trace, AgentTask } from '../types/agent';

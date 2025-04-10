@@ -1,10 +1,8 @@
-
 import { v4 as uuidv4 } from 'uuid';
 import { Message, Trace, AgentTask } from '../types/agent';
 import { autogenAdapter } from './autogenAdapter';
 import { rasaAdapter } from './rasaAdapter';
 
-// Define the type for the callback function
 type UpdateCallback = () => void;
 
 class AgentService {
@@ -17,14 +15,12 @@ class AgentService {
   private updateCallbacks: UpdateCallback[] = [];
   private conversationId: string | null = null;
   
-  // Framework flags
   private useAutogen: boolean = false;
   private useLangChain: boolean = false;
   private useRasa: boolean = false;
   private currentFramework: 'native' | 'autogen' | 'langchain' | 'rasa' = 'native';
 
   private constructor() {
-    // Register for updates from autogenAdapter
     autogenAdapter.registerMessageCallback(this.handleNewMessages.bind(this));
     autogenAdapter.registerTraceCallback(this.handleNewTraces.bind(this));
     autogenAdapter.registerTaskCallback(this.handleNewTasks.bind(this));
@@ -37,30 +33,29 @@ class AgentService {
     return AgentService.instance;
   }
 
-  // Handler for new messages from AutoGen
   private handleNewMessages(messages: Message[]): void {
-    this.messages = [...this.messages, ...messages];
+    const validatedMessages = messages.map(msg => ({
+      ...msg,
+      type: this.validateMessageType(msg.type)
+    }));
+    
+    this.messages = [...this.messages, ...validatedMessages];
     this.notifyUpdate();
   }
 
-  // Handler for new traces from AutoGen
   private handleNewTraces(traces: Trace[]): void {
     this.traces = [...this.traces, ...traces];
     this.notifyUpdate();
   }
 
-  // Handler for new tasks from AutoGen
   private handleNewTasks(tasks: AgentTask[]): void {
-    // Check if we need to update existing tasks or add new ones
     const updatedTasks = [...this.tasks];
     
     tasks.forEach(newTask => {
       const existingTaskIndex = updatedTasks.findIndex(t => t.id === newTask.id);
       if (existingTaskIndex >= 0) {
-        // Update existing task
         updatedTasks[existingTaskIndex] = newTask;
       } else {
-        // Add new task
         updatedTasks.push(newTask);
       }
     });
@@ -136,7 +131,6 @@ class AgentService {
       this.processing = true;
       this.notifyUpdate();
       
-      // Create a user message
       const userMessage: Message = {
         id: uuidv4(),
         from: 'user',
@@ -149,16 +143,13 @@ class AgentService {
       this.messages.push(userMessage);
       this.notifyUpdate();
       
-      // Process with the appropriate framework
       if (this.useAutogen) {
         await this.processWithAutogen(content);
       } else if (this.useLangChain) {
-        // LangChain integration is not yet implemented
         this.addTrace('coordinator-1', 'langchain_not_implemented', 'LangChain processing is not implemented yet');
       } else if (this.useRasa) {
         await this.processWithRasa(content);
       } else {
-        // Native processing is not yet implemented
         this.addTrace('coordinator-1', 'native_not_implemented', 'Native processing is not implemented yet');
       }
       
@@ -176,7 +167,6 @@ class AgentService {
       this.processing = true;
       this.notifyUpdate();
       
-      // Create a user message to the specific agent
       const userMessage: Message = {
         id: uuidv4(),
         from: 'user',
@@ -189,17 +179,14 @@ class AgentService {
       this.messages.push(userMessage);
       this.notifyUpdate();
       
-      // Process with the appropriate framework
       if (this.useAutogen) {
         await this.processDirectMessageWithAutogen(agentId, content);
       } else if (this.useLangChain) {
-        // LangChain integration is not yet implemented
         this.addTrace(agentId, 'direct_message_received', `Direct message from user: ${content}`);
         this.addTrace(agentId, 'langchain_not_implemented', 'LangChain direct messaging is not implemented yet');
       } else if (this.useRasa) {
         await this.processDirectMessageWithRasa(agentId, content);
       } else {
-        // Native processing is not yet implemented
         this.addTrace(agentId, 'direct_message_received', `Direct message from user: ${content}`);
         this.addTrace(agentId, 'native_not_implemented', 'Native direct messaging is not implemented yet');
       }
@@ -215,7 +202,6 @@ class AgentService {
 
   private async processWithAutogen(content: string): Promise<void> {
     try {
-      // Create a conversation if not exists
       if (!this.conversationId) {
         this.conversationId = await autogenAdapter.createConversation();
       }
@@ -224,10 +210,7 @@ class AgentService {
         throw new Error('Failed to create AutoGen conversation');
       }
       
-      // Send message to AutoGen
       await autogenAdapter.sendMessage(this.conversationId, content);
-      
-      // The responses will be handled by the registered callbacks
       
     } catch (error) {
       console.error('Error in AutoGen processing:', error);
@@ -237,7 +220,6 @@ class AgentService {
 
   private async processDirectMessageWithAutogen(agentId: string, content: string): Promise<void> {
     try {
-      // Create a conversation if not exists
       if (!this.conversationId) {
         this.conversationId = await autogenAdapter.createConversation();
       }
@@ -246,15 +228,8 @@ class AgentService {
         throw new Error('Failed to create AutoGen conversation');
       }
       
-      // Add a trace
-      this.addTrace(agentId, 'direct_message_received', `Direct message from user: ${content}`);
-      
-      // In a full implementation, this would send the message directly to the specific agent
-      // For now, we'll use the existing sendMessage with context about the target agent
       const directedContent = `[DIRECT MESSAGE TO ${agentId}] ${content}`;
       await autogenAdapter.sendMessage(this.conversationId, directedContent);
-      
-      // The responses will be handled by the registered callbacks
       
     } catch (error) {
       console.error('Error in AutoGen direct message processing:', error);
@@ -264,7 +239,6 @@ class AgentService {
 
   private async processWithRasa(content: string): Promise<void> {
     try {
-      // We would implement actual Rasa integration here
       const rasaConnected = await rasaAdapter.isBackendConnected();
       if (!rasaConnected) {
         await rasaAdapter.connect();
@@ -277,7 +251,6 @@ class AgentService {
       
       const response = await rasaAdapter.sendMessage(conversationId, content);
       if (response) {
-        // Process any messages received from Rasa
         if (response.messages && response.messages.length > 0) {
           const formattedMessages = response.messages.map(msg => ({
             id: uuidv4(),
@@ -285,18 +258,16 @@ class AgentService {
             to: msg.recipient || 'user',
             content: msg.content,
             timestamp: new Date(),
-            type: 'response' as 'response' | 'request' | 'internal'
+            type: this.validateMessageType(msg.type || 'response')
           }));
           
           this.handleNewMessages(formattedMessages);
         }
         
-        // Process any traces received from Rasa
         if (response.traces && response.traces.length > 0) {
           this.handleNewTraces(response.traces);
         }
         
-        // Process any tasks received from Rasa
         if (response.tasks && response.tasks.length > 0) {
           this.handleNewTasks(response.tasks);
         }
@@ -309,7 +280,6 @@ class AgentService {
 
   private async processDirectMessageWithRasa(agentId: string, content: string): Promise<void> {
     try {
-      // We would implement actual Rasa direct message integration here
       const rasaConnected = await rasaAdapter.isBackendConnected();
       if (!rasaConnected) {
         await rasaAdapter.connect();
@@ -320,14 +290,10 @@ class AgentService {
         throw new Error('Failed to create Rasa conversation');
       }
       
-      // Add a trace
-      this.addTrace(agentId, 'direct_message_received', `Direct message from user to ${agentId}: ${content}`);
-      
       const directedContent = `[DIRECT MESSAGE TO ${agentId}] ${content}`;
       const response = await rasaAdapter.sendMessage(conversationId, directedContent);
       
       if (response) {
-        // Process any messages received from Rasa
         if (response.messages && response.messages.length > 0) {
           const formattedMessages = response.messages.map(msg => ({
             id: uuidv4(),
@@ -335,18 +301,16 @@ class AgentService {
             to: msg.recipient || 'user',
             content: msg.content,
             timestamp: new Date(),
-            type: 'response' as 'response' | 'request' | 'internal'
+            type: this.validateMessageType(msg.type || 'response')
           }));
           
           this.handleNewMessages(formattedMessages);
         }
         
-        // Process any traces received from Rasa
         if (response.traces && response.traces.length > 0) {
           this.handleNewTraces(response.traces);
         }
         
-        // Process any tasks received from Rasa
         if (response.tasks && response.tasks.length > 0) {
           this.handleNewTasks(response.tasks);
         }
@@ -357,7 +321,12 @@ class AgentService {
     }
   }
 
-  // All legacy simulation methods have been removed
+  private validateMessageType(type: string): 'response' | 'request' | 'internal' {
+    if (type === 'response' || type === 'request' || type === 'internal') {
+      return type;
+    }
+    return 'response';
+  }
 
   private addTrace(agentId: string, action: string, details: string): void {
     const trace: Trace = {
