@@ -8,6 +8,7 @@ import { toast } from '@/components/ui/sonner';
 import { agentService } from '../services/agentService';
 import { autogenAdapter } from '../services/autogenAdapter';
 import { rasaAdapter } from '../services/rasaAdapter';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface RequestFormProps {
   onRequestSubmitted?: () => void;
@@ -19,20 +20,28 @@ const RequestForm: React.FC<RequestFormProps> = ({ onRequestSubmitted }) => {
   const [framework, setFramework] = useState<'native' | 'autogen' | 'langchain' | 'rasa'>('native');
   const [autogenConnected, setAutogenConnected] = useState(false);
   const [rasaConnected, setRasaConnected] = useState(false);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
 
   useEffect(() => {
     // Check if backends are connected
     const checkConnections = async () => {
+      setConnectionError(null);
+      
       if (framework === 'autogen') {
-        const isConnected = await autogenAdapter.isBackendConnected();
-        setAutogenConnected(isConnected);
-        if (!isConnected) {
-          try {
+        try {
+          const isConnected = await autogenAdapter.isBackendConnected();
+          setAutogenConnected(isConnected);
+          if (!isConnected) {
+            console.log("Trying to connect to AutoGen backend...");
             const connected = await autogenAdapter.connect();
             setAutogenConnected(connected);
-          } catch (error) {
-            console.error("Failed to connect to AutoGen:", error);
+            if (!connected) {
+              setConnectionError("Could not connect to AutoGen backend. Make sure the backend server is running and the API key is configured.");
+            }
           }
+        } catch (error) {
+          console.error("Failed to connect to AutoGen:", error);
+          setConnectionError(`Failed to connect to AutoGen: ${error instanceof Error ? error.message : String(error)}`);
         }
       } else if (framework === 'rasa') {
         const isConnected = await rasaAdapter.isBackendConnected();
@@ -43,6 +52,7 @@ const RequestForm: React.FC<RequestFormProps> = ({ onRequestSubmitted }) => {
             setRasaConnected(connected);
           } catch (error) {
             console.error("Failed to connect to Rasa:", error);
+            setConnectionError(`Failed to connect to Rasa: ${error instanceof Error ? error.message : String(error)}`);
           }
         }
       }
@@ -53,17 +63,23 @@ const RequestForm: React.FC<RequestFormProps> = ({ onRequestSubmitted }) => {
 
   const handleFrameworkChange = async (value: 'native' | 'autogen' | 'langchain' | 'rasa') => {
     setFramework(value);
+    setConnectionError(null);
     
     // Update the framework in the agent service
     if (value === 'autogen') {
       agentService.toggleAutogen(true);
       
       try {
+        console.log("Connecting to AutoGen backend after framework change...");
         const connected = await autogenAdapter.connect();
         setAutogenConnected(connected);
+        if (!connected) {
+          setConnectionError("Could not connect to AutoGen backend. Make sure the backend server is running and the API key is configured.");
+        }
       } catch (error) {
         console.error("Failed to connect to AutoGen:", error);
         toast.error("Failed to connect to AutoGen backend");
+        setConnectionError(`Failed to connect to AutoGen: ${error instanceof Error ? error.message : String(error)}`);
       }
     } else if (value === 'langchain') {
       agentService.toggleLangChain(true);
@@ -77,6 +93,7 @@ const RequestForm: React.FC<RequestFormProps> = ({ onRequestSubmitted }) => {
       } catch (error) {
         console.error("Failed to connect to Rasa:", error);
         toast.error("Failed to connect to Rasa backend");
+        setConnectionError(`Failed to connect to Rasa: ${error instanceof Error ? error.message : String(error)}`);
       }
     } else {
       // Native framework
@@ -113,6 +130,7 @@ const RequestForm: React.FC<RequestFormProps> = ({ onRequestSubmitted }) => {
     
     setIsSubmitting(true);
     try {
+      console.log(`Submitting ${framework} request: ${prompt}`);
       await agentService.submitUserRequest(prompt);
       toast.success('Request submitted successfully');
       setPrompt('');
@@ -120,6 +138,7 @@ const RequestForm: React.FC<RequestFormProps> = ({ onRequestSubmitted }) => {
         onRequestSubmitted();
       }
     } catch (error) {
+      console.error("Error submitting request:", error);
       toast.error(error instanceof Error ? error.message : 'Failed to submit request');
     } finally {
       setIsSubmitting(false);
@@ -161,6 +180,12 @@ const RequestForm: React.FC<RequestFormProps> = ({ onRequestSubmitted }) => {
           </RadioGroup>
         </div>
         
+        {connectionError && (
+          <Alert variant="destructive" className="mb-3">
+            <AlertDescription>{connectionError}</AlertDescription>
+          </Alert>
+        )}
+        
         <div>
           <label htmlFor="prompt" className="block text-sm font-medium mb-1">
             Enter your request
@@ -173,7 +198,17 @@ const RequestForm: React.FC<RequestFormProps> = ({ onRequestSubmitted }) => {
             className="w-full min-h-[80px]"
           />
         </div>
-        <div className="flex justify-end">
+        
+        <div className="flex justify-between items-center">
+          <div className="text-sm text-gray-500">
+            {framework === 'autogen' && (
+              <span>
+                {autogenConnected ? 
+                  "Connected to AutoGen backend" : 
+                  "Not connected to AutoGen backend"}
+              </span>
+            )}
+          </div>
           <Button 
             type="submit" 
             disabled={isSubmitting || !prompt.trim() || !isBackendReadyCheck()}
