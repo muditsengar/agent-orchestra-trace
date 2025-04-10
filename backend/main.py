@@ -1,3 +1,4 @@
+
 from fastapi import FastAPI, WebSocket, HTTPException, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -345,9 +346,6 @@ async def process_with_autogen(conversation_id: str, content: str):
         code_execution_config=code_execution_config
     )
     
-    # Define a simpler approach without custom callbacks
-    # We'll use a basic group chat manager instead
-    
     # Create a group chat for all agents
     groupchat = autogen.GroupChat(
         agents=[coordinator, researcher, planner, executor, user_proxy],
@@ -405,51 +403,43 @@ async def process_with_autogen(conversation_id: str, content: str):
         await update_task(conversation_id, execution_task["id"], "completed", "Execution completed")
         await add_trace(conversation_id, "executor-1", "task_completed", "Completed execution task")
     
-    # Create a function to register message callbacks for each agent
-    async def register_reply_callback():
-        """Register reply callbacks for all agents to capture their messages."""
+    # Create a function to handle message callbacks for all agents
+    async def register_message_callbacks():
+        """Register message callbacks for all agents."""
         
-        def custom_on_message(sender=None, message=None):
-            """Custom callback to process agent messages (must be synchronous)"""
-            # In AutoGen's callback system, parameters are passed as keyword arguments
-            # not positional arguments, so we need to handle that
-            print(f"Message callback triggered!")
-            
-            if sender is None or message is None:
-                print("Warning: Received incomplete callback parameters")
-                return
-                
-            # Parse recipient from the message metadata if available
-            recipient = "unknown"
-            try:
-                if isinstance(message, dict) and "recipient" in message:
-                    recipient = message["recipient"]
-            except:
-                pass
-                
-            print(f"Message: {str(message)[:50]}... From: {sender} To: {recipient}")
-            
+        # Define a callback function that will be registered for each agent
+        def message_callback(recipient, message, sender):
+            """Callback that will be triggered when an agent sends a message."""
             # Create a task to handle the async operations
-            asyncio.create_task(process_message(sender, recipient, str(message)))
+            asyncio.create_task(process_agent_message(sender.name, recipient.name, message))
+            return False  # Continue the conversation
         
-        async def process_message(sender, recipient, message):
-            """Process messages asynchronously"""
-            # For messages between agents (internal communications)
-            if recipient != "user-proxy" and sender != "user-proxy":
-                await add_message(conversation_id, sender, recipient, message, "internal")
-                await add_trace(conversation_id, sender, "message_sent", f"Message sent to {recipient}")
-                
-            # For messages to the user (conversation)
-            if recipient == "user-proxy":
-                await add_message(conversation_id, sender, "user", message, "response")
-                await add_trace(conversation_id, sender, "response_sent", "Response sent to user")
-                
+        async def process_agent_message(sender_name, recipient_name, message_content):
+            """Process messages asynchronously."""
+            sender_id = sender_name.lower().replace(" ", "-")
+            recipient_id = recipient_name.lower().replace(" ", "-")
+            
+            if sender_id == "user-proxy":
+                sender_id = "user"
+            if recipient_id == "user-proxy":
+                recipient_id = "user"
+            
+            # For internal communications between agents
+            if recipient_id != "user" and sender_id != "user":
+                await add_message(conversation_id, sender_id, recipient_id, str(message_content), "internal")
+                await add_trace(conversation_id, sender_id, "message_sent", f"Message sent to {recipient_id}")
+            
+            # For responses to the user
+            if recipient_id == "user":
+                await add_message(conversation_id, sender_id, "user", str(message_content), "response")
+                await add_trace(conversation_id, sender_id, "response_sent", "Response sent to user")
+        
         # Register the callback for each agent
         for agent in [coordinator, researcher, planner, executor]:
-            agent.register_reply(custom_on_message)
-            
-    # Register callbacks before initiating the chat
-    await register_reply_callback()
+            agent.register_reply(message_callback)
+    
+    # Register callbacks
+    await register_message_callbacks()
     
     # Trace the flow
     await add_trace(conversation_id, "coordinator-1", "process_started", "Processing request with AutoGen")
@@ -459,7 +449,6 @@ async def process_with_autogen(conversation_id: str, content: str):
         asyncio.create_task(update_task_status())
         
         # Create direct message handlers to ensure we're seeing communications
-        # Since we'll be handling them manually
         await add_message(conversation_id, "user", "coordinator-1", content, "request")
         await add_message(conversation_id, "coordinator-1", "user", "I'm analyzing your request now...", "response")
         
