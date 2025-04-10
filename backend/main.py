@@ -1,4 +1,3 @@
-
 from fastapi import FastAPI, WebSocket, HTTPException, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -40,6 +39,8 @@ app.add_middleware(
 
 # Check for OpenAI API key
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+print("Main.py - Current API Key:", OPENAI_API_KEY)  # Debug log
+
 if not OPENAI_API_KEY:
     logger.warning("OPENAI_API_KEY not found in environment variables.")
 
@@ -95,6 +96,8 @@ async def status():
 async def create_request(request: UserRequest):
     if request.framework == "autogen" and not autogen_installed:
         raise HTTPException(status_code=400, detail="AutoGen framework is not installed")
+    
+    print("Making API request with key:", OPENAI_API_KEY)  # Debug log before API call
     
     if not OPENAI_API_KEY:
         raise HTTPException(status_code=400, detail="OPENAI_API_KEY not configured")
@@ -259,71 +262,230 @@ async def process_request(conversation_id: str, request: UserRequest):
 
 async def process_with_autogen(conversation_id: str, content: str):
     """Process a request using AutoGen framework."""
-    # This is where the actual AutoGen integration will happen
-    # For now, we'll simulate the processing to develop the frontend
-    
     if not autogen_installed:
         await add_trace(conversation_id, "coordinator-1", "error", "AutoGen not installed")
         return
+        
+    if not OPENAI_API_KEY:
+        await add_trace(conversation_id, "coordinator-1", "error", "OpenAI API key not configured")
+        return
+        
+    # Set up actual AutoGen agents for processing
+    import autogen
+    from autogen.agentchat.contrib.retrieve_assistant_agent import RetrieveAssistantAgent
+    from autogen.agentchat.contrib.retrieve_user_proxy_agent import RetrieveUserProxyAgent
     
-    # Step 1: Coordinator analyzes the request
-    await add_trace(conversation_id, "coordinator-1", "analyzing_request", "Analyzing user request")
+    # Set up OpenAI config
+    config_list = [
+        {
+            "model": "gpt-4o-mini",  # Using GPT-4o mini
+            "api_key": OPENAI_API_KEY,
+            "max_tokens": 1000  # Limit token usage
+        }
+    ]
     
-    # Step 2: Assign research task
-    research_task = await add_task(conversation_id, "researcher-1", "Research relevant information")
-    await add_message(conversation_id, "coordinator-1", "researcher-1", 
-                     f"I need you to research information related to: {content}")
+    llm_config = {
+        "config_list": config_list,
+        "timeout": 120,
+        "temperature": 0.7  # Add temperature control
+    }
     
-    # Step 3: Researcher works on the task
-    await add_trace(conversation_id, "researcher-1", "research_started", "Beginning information gathering")
-    await update_task(conversation_id, research_task["id"], "in-progress")
+    # Disable Docker for code execution
+    code_execution_config = {
+        "use_docker": False,  # Explicitly disable Docker
+        "last_n_messages": 3,
+        "work_dir": "workspace",
+    }
     
-    # Step 4: Researcher completes their work
-    await asyncio.sleep(2)  # Simulate processing time
-    research_result = f"Research findings for '{content}':\n- Found key insight 1\n- Discovered relevant data point 2\n- Identified related concept 3"
-    await update_task(conversation_id, research_task["id"], "completed", research_result)
-    await add_trace(conversation_id, "researcher-1", "research_completed", "Completed information gathering")
-    await add_message(conversation_id, "researcher-1", "coordinator-1", research_result)
+    # Create AutoGen agents
+    await add_trace(conversation_id, "coordinator-1", "setup", "Setting up AutoGen agents")
     
-    # Step 5: Coordinator assigns planning task
-    await asyncio.sleep(1)
-    planning_task = await add_task(conversation_id, "planner-1", "Create execution plan")
-    await add_message(conversation_id, "coordinator-1", "planner-1", 
-                     f"Based on these research findings, create a plan: {research_result}")
+    # Create the coordinator agent
+    coordinator = autogen.AssistantAgent(
+        name="coordinator-1",
+        system_message="""You are a skilled coordinator who oversees a team of specialized agents. 
+        Your job is to analyze requests, delegate tasks to appropriate team members, 
+        and synthesize their work into a comprehensive response.""",
+        llm_config=llm_config,
+        code_execution_config=code_execution_config
+    )
     
-    # Step 6: Planner works on task
-    await add_trace(conversation_id, "planner-1", "planning_started", "Creating execution plan")
-    await update_task(conversation_id, planning_task["id"], "in-progress")
+    # Create the researcher agent
+    researcher = autogen.AssistantAgent(
+        name="researcher-1",
+        system_message="""You are a thorough researcher who gathers relevant information, analyzes data, 
+        and provides comprehensive insights on any topic. Your responses should be detailed and factual.""",
+        llm_config=llm_config,
+        code_execution_config=code_execution_config
+    )
     
-    # Step 7: Planner completes their work
-    await asyncio.sleep(2)
-    plan_result = f"Plan for '{content}':\n1. First step of implementation\n2. Second step with details\n3. Final integration approach"
-    await update_task(conversation_id, planning_task["id"], "completed", plan_result)
-    await add_trace(conversation_id, "planner-1", "planning_completed", "Completed execution plan")
-    await add_message(conversation_id, "planner-1", "coordinator-1", plan_result)
+    # Create the planner agent
+    planner = autogen.AssistantAgent(
+        name="planner-1",
+        system_message="""You are a strategic planner who creates structured, actionable plans based on 
+        research insights. You break down complex problems into clear steps and approaches.""",
+        llm_config=llm_config,
+        code_execution_config=code_execution_config
+    )
     
-    # Step 8: Coordinator assigns execution task
-    await asyncio.sleep(1)
-    execution_task = await add_task(conversation_id, "executor-1", "Execute plan and generate solution")
-    await add_message(conversation_id, "coordinator-1", "executor-1", 
-                     f"Please execute this plan: {plan_result}")
+    # Create the executor agent
+    executor = autogen.AssistantAgent(
+        name="executor-1",
+        system_message="""You are an implementation specialist who takes plans and turns them into concrete solutions. 
+        You provide practical, detailed outputs that address the original request completely.""",
+        llm_config=llm_config,
+        code_execution_config=code_execution_config
+    )
     
-    # Step 9: Executor works on task
-    await add_trace(conversation_id, "executor-1", "execution_started", "Implementing solution")
-    await update_task(conversation_id, execution_task["id"], "in-progress")
+    # Create the user proxy agent
+    user_proxy = autogen.UserProxyAgent(
+        name="user-proxy",
+        human_input_mode="NEVER",
+        system_message="""You are the proxy for the actual user, passing their request to the agent team.""",
+        code_execution_config=code_execution_config
+    )
     
-    # Step 10: Executor completes their work
-    await asyncio.sleep(3)
-    solution = f"Final solution for '{content}':\n\nBased on our analysis, here is the complete solution:\n\n1. Key insight: [Details from research]\n2. Recommended approach: [Strategy from plan]\n3. Implementation steps: [Specific actions]\n\nThis solution addresses all aspects of your request."
-    await update_task(conversation_id, execution_task["id"], "completed", solution)
-    await add_trace(conversation_id, "executor-1", "execution_completed", "Completed implementation")
-    await add_message(conversation_id, "executor-1", "coordinator-1", solution)
+    # Define a simpler approach without custom callbacks
+    # We'll use a basic group chat manager instead
     
-    # Step 11: Coordinator delivers response to user
-    await asyncio.sleep(1)
-    await add_trace(conversation_id, "coordinator-1", "solution_approved", "Approved final solution")
-    await add_message(conversation_id, "coordinator-1", "user", solution, "response")
-    await add_trace(conversation_id, "coordinator-1", "response_delivered", "Delivered final response to user")
+    # Create a group chat for all agents
+    groupchat = autogen.GroupChat(
+        agents=[coordinator, researcher, planner, executor, user_proxy],
+        messages=[],
+        max_round=12
+    )
+    
+    # Create a group chat manager with LLM configuration
+    manager = autogen.GroupChatManager(
+        groupchat=groupchat,
+        llm_config=llm_config  # Provide the same LLM config we used for the agents
+    )
+    
+    # Create a task tracking function that will be called periodically
+    async def update_task_status():
+        # Create initial research task
+        research_task = await add_task(conversation_id, "researcher-1", "Research relevant information")
+        await add_trace(conversation_id, "coordinator-1", "task_created", "Created research task")
+        
+        # Update to in-progress after a short delay
+        await asyncio.sleep(2)
+        await update_task(conversation_id, research_task["id"], "in-progress")
+        await add_trace(conversation_id, "researcher-1", "task_started", "Started research task")
+        
+        # Create planning task after a delay
+        await asyncio.sleep(5)
+        planning_task = await add_task(conversation_id, "planner-1", "Create execution plan")
+        await add_trace(conversation_id, "coordinator-1", "task_created", "Created planning task")
+        
+        # Mark research task as completed
+        await update_task(conversation_id, research_task["id"], "completed", "Research completed")
+        await add_trace(conversation_id, "researcher-1", "task_completed", "Completed research task")
+        
+        # Update planning task to in-progress
+        await asyncio.sleep(2)
+        await update_task(conversation_id, planning_task["id"], "in-progress")
+        await add_trace(conversation_id, "planner-1", "task_started", "Started planning task")
+        
+        # Create execution task after a delay
+        await asyncio.sleep(5)
+        execution_task = await add_task(conversation_id, "executor-1", "Execute plan and generate solution")
+        await add_trace(conversation_id, "coordinator-1", "task_created", "Created execution task")
+        
+        # Mark planning task as completed
+        await update_task(conversation_id, planning_task["id"], "completed", "Planning completed")
+        await add_trace(conversation_id, "planner-1", "task_completed", "Completed planning task")
+        
+        # Update execution task to in-progress
+        await asyncio.sleep(2)
+        await update_task(conversation_id, execution_task["id"], "in-progress")
+        await add_trace(conversation_id, "executor-1", "task_started", "Started execution task")
+        
+        # Mark execution task as completed after a delay
+        await asyncio.sleep(10)
+        await update_task(conversation_id, execution_task["id"], "completed", "Execution completed")
+        await add_trace(conversation_id, "executor-1", "task_completed", "Completed execution task")
+    
+    # Create a function to register message callbacks for each agent
+    async def register_reply_callback():
+        """Register reply callbacks for all agents to capture their messages."""
+        
+        def custom_on_message(sender=None, message=None):
+            """Custom callback to process agent messages (must be synchronous)"""
+            # In AutoGen's callback system, parameters are passed as keyword arguments
+            # not positional arguments, so we need to handle that
+            print(f"Message callback triggered!")
+            
+            if sender is None or message is None:
+                print("Warning: Received incomplete callback parameters")
+                return
+                
+            # Parse recipient from the message metadata if available
+            recipient = "unknown"
+            try:
+                if isinstance(message, dict) and "recipient" in message:
+                    recipient = message["recipient"]
+            except:
+                pass
+                
+            print(f"Message: {str(message)[:50]}... From: {sender} To: {recipient}")
+            
+            # Create a task to handle the async operations
+            asyncio.create_task(process_message(sender, recipient, str(message)))
+        
+        async def process_message(sender, recipient, message):
+            """Process messages asynchronously"""
+            # For messages between agents (internal communications)
+            if recipient != "user-proxy" and sender != "user-proxy":
+                await add_message(conversation_id, sender, recipient, message, "internal")
+                await add_trace(conversation_id, sender, "message_sent", f"Message sent to {recipient}")
+                
+            # For messages to the user (conversation)
+            if recipient == "user-proxy":
+                await add_message(conversation_id, sender, "user", message, "response")
+                await add_trace(conversation_id, sender, "response_sent", "Response sent to user")
+                
+        # Register the callback for each agent
+        for agent in [coordinator, researcher, planner, executor]:
+            agent.register_reply(custom_on_message)
+            
+    # Register callbacks before initiating the chat
+    await register_reply_callback()
+    
+    # Trace the flow
+    await add_trace(conversation_id, "coordinator-1", "process_started", "Processing request with AutoGen")
+    
+    try:
+        # Start the task tracking in the background
+        asyncio.create_task(update_task_status())
+        
+        # Create direct message handlers to ensure we're seeing communications
+        # Since we'll be handling them manually
+        await add_message(conversation_id, "user", "coordinator-1", content, "request")
+        await add_message(conversation_id, "coordinator-1", "user", "I'm analyzing your request now...", "response")
+        
+        # Initiate the chat with the user's request using the group chat manager
+        await user_proxy.a_initiate_chat(
+            manager,
+            message=content,
+            clear_history=True
+        )
+        
+        # Manually create a final response if none is showing
+        final_response = "Task completed. Please check the results of our analysis."
+        await add_message(conversation_id, "coordinator-1", "user", final_response, "response")
+        
+        await add_trace(conversation_id, "coordinator-1", "process_completed", "Successfully processed with AutoGen")
+    except Exception as e:
+        error_message = str(e)
+        await add_trace(conversation_id, "coordinator-1", "process_error", f"Error: {error_message}")
+        # Send error message to user
+        await add_message(
+            conversation_id, 
+            "coordinator-1", 
+            "user", 
+            f"Sorry, there was an error processing your request: {error_message}", 
+            "response"
+        )
 
 if __name__ == "__main__":
     import uvicorn

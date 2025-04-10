@@ -110,7 +110,7 @@ const RequestForm: React.FC<RequestFormProps> = ({ onRequestSubmitted }) => {
       }
     } else if (value === 'langchain') {
       agentService.toggleLangChain(true);
-      // LangChain is simulated, no backend connection needed
+      // LangChain requires backend connection
     } else if (value === 'rasa') {
       agentService.toggleRasa(true);
       

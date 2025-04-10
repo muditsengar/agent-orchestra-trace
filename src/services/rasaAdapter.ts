@@ -27,10 +27,30 @@ class RasaAdapter {
   }
 
   async connect(): Promise<boolean> {
-    // Simulate connection to Rasa server
-    console.log('Connecting to Rasa backend...');
-    this.connected = true;
-    return this.connected;
+    try {
+      console.log('Connecting to Rasa backend...');
+      // Try to connect to the Rasa server by making a status request
+      const response = await fetch('http://localhost:5005/status', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        console.log('Successfully connected to Rasa server');
+        this.connected = true;
+        return true;
+      } else {
+        console.error('Failed to connect to Rasa server:', response.status, response.statusText);
+        this.connected = false;
+        return false;
+      }
+    } catch (error) {
+      console.error('Error connecting to Rasa server:', error);
+      this.connected = false;
+      return false;
+    }
   }
 
   // Add the missing isBackendConnected method
@@ -40,51 +60,109 @@ class RasaAdapter {
 
   async createConversation(): Promise<string | null> {
     if (!this.connected) {
-      await this.connect();
+      const connected = await this.connect();
+      if (!connected) {
+        return null;
+      }
     }
 
-    // Simulate creating a conversation in Rasa
+    // Generate a session ID for the Rasa conversation
     const conversationId = uuidv4();
     console.log(`Created Rasa conversation with ID: ${conversationId}`);
-    return conversationId;
+    
+    try {
+      // Initialize the conversation with Rasa (not required for all Rasa setups, but good practice)
+      const response = await fetch('http://localhost:5005/conversations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          sender_id: conversationId
+        })
+      });
+      
+      if (response.ok) {
+        return conversationId;
+      } else {
+        console.error('Failed to create Rasa conversation:', response.status, response.statusText);
+        return null;
+      }
+    } catch (error) {
+      console.error('Error creating Rasa conversation:', error);
+      return null;
+    }
   }
 
   async sendMessage(conversationId: string, message: string): Promise<RasaResponse | null> {
     if (!this.connected) {
-      await this.connect();
+      const connected = await this.connect();
+      if (!connected) {
+        return null;
+      }
     }
 
-    console.log(`Sending message to Rasa: ${message}`);
+    console.log(`Sending message to Rasa server: ${message}`);
 
-    // Simulate delay for processing
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    try {
+      // Send the message to Rasa server
+      const response = await fetch(`http://localhost:5005/webhooks/rest/webhook`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          sender: conversationId,
+          message: message
+        })
+      });
 
-    // Extract request type to provide appropriate detailed response
-    const isConferencePlanning = message.toLowerCase().includes('conference') && 
-        message.toLowerCase().includes('plan');
-    const isBudget = message.toLowerCase().includes('budget');
-    const isJobSearch = message.toLowerCase().includes('job') || message.toLowerCase().includes('career');
-    const isInterview = message.toLowerCase().includes('interview');
+      if (!response.ok) {
+        console.error('Failed to send message to Rasa:', response.status, response.statusText);
+        return null;
+      }
 
-    let response: RasaResponse = {
-      messages: [],
-      traces: [],
-      tasks: []
-    };
+      // Parse Rasa response
+      const rasaMessages = await response.json();
+      console.log('Received Rasa response:', rasaMessages);
 
-    if (isConferencePlanning && isBudget) {
-      response = this.generateConferencePlanResponse(message);
-    } else if (isJobSearch) {
-      response = this.generateJobSearchResponse(message);
-    } else if (isInterview) {
-      response = this.generateInterviewPrepResponse(message);
-    } else {
-      response = this.generateGenericResponse(message);
+      // Create our response structure
+      const formattedResponse: RasaResponse = {
+        messages: rasaMessages.map((msg: any) => ({
+          sender: 'rasa-bot',
+          recipient: 'user',
+          content: msg.text || JSON.stringify(msg)
+        })),
+        traces: [
+          {
+            id: uuidv4(),
+            agentId: 'rasa-bot',
+            action: 'message_processed',
+            details: `Processed message: "${message}"`,
+            timestamp: new Date()
+          }
+        ],
+        tasks: [
+          {
+            id: uuidv4(),
+            assignedTo: 'rasa-bot',
+            description: `Process message: "${message}"`,
+            status: 'completed',
+            createdAt: new Date(),
+            completedAt: new Date()
+          }
+        ]
+      };
+
+      return formattedResponse;
+    } catch (error) {
+      console.error('Error sending message to Rasa:', error);
+      return null;
     }
-
-    return response;
   }
 
+  // Real implementations no longer need these simulation methods
+  /*
   private generateConferencePlanResponse(userRequest: string): RasaResponse {
     // Parse key parameters from the request
     const parameters = this.extractParameters(userRequest);
@@ -488,6 +566,7 @@ This complete conference plan maximizes your $5,000 budget while providing a pro
     
     return parameters;
   }
+  */
 }
 
 export const rasaAdapter = RasaAdapter.getInstance();

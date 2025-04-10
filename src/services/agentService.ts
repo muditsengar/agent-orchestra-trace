@@ -153,12 +153,12 @@ class AgentService {
       if (this.useAutogen) {
         await this.processWithAutogen(content);
       } else if (this.useLangChain) {
-        // Not simulating LangChain anymore - just add a message that this is not implemented
+        // LangChain integration is not yet implemented
         this.addTrace('coordinator-1', 'langchain_not_implemented', 'LangChain processing is not implemented yet');
       } else if (this.useRasa) {
         await this.processWithRasa(content);
       } else {
-        // Not simulating Native anymore - just add a message that this is not implemented
+        // Native processing is not yet implemented
         this.addTrace('coordinator-1', 'native_not_implemented', 'Native processing is not implemented yet');
       }
       
@@ -193,13 +193,13 @@ class AgentService {
       if (this.useAutogen) {
         await this.processDirectMessageWithAutogen(agentId, content);
       } else if (this.useLangChain) {
-        // Not simulating LangChain anymore
+        // LangChain integration is not yet implemented
         this.addTrace(agentId, 'direct_message_received', `Direct message from user: ${content}`);
         this.addTrace(agentId, 'langchain_not_implemented', 'LangChain direct messaging is not implemented yet');
       } else if (this.useRasa) {
         await this.processDirectMessageWithRasa(agentId, content);
       } else {
-        // Not simulating Native anymore
+        // Native processing is not yet implemented
         this.addTrace(agentId, 'direct_message_received', `Direct message from user: ${content}`);
         this.addTrace(agentId, 'native_not_implemented', 'Native direct messaging is not implemented yet');
       }
@@ -250,7 +250,7 @@ class AgentService {
       this.addTrace(agentId, 'direct_message_received', `Direct message from user: ${content}`);
       
       // In a full implementation, this would send the message directly to the specific agent
-      // For now, we'll simulate by using the existing sendMessage but adding context
+      // For now, we'll use the existing sendMessage with context about the target agent
       const directedContent = `[DIRECT MESSAGE TO ${agentId}] ${content}`;
       await autogenAdapter.sendMessage(this.conversationId, directedContent);
       
@@ -357,37 +357,7 @@ class AgentService {
     }
   }
 
-  // Commented out all simulation methods
-  /*
-  private async simulateLangChain(content: string): Promise<void> {
-    // Simulation code removed
-  }
-
-  private async simulateDirectMessageWithLangChain(agentId: string, content: string): Promise<void> {
-    // Simulation code removed
-  }
-
-  private async simulateRasa(content: string): Promise<void> {
-    // Simulation code removed
-  }
-
-  private async simulateDirectMessageWithRasa(agentId: string, content: string): Promise<void> {
-    // Simulation code removed
-  }
-
-  private async simulateNative(content: string): Promise<void> {
-    // Simulation code removed
-  }
-
-  private async simulateDirectMessageNative(agentId: string, content: string): Promise<void> {
-    // Simulation code removed
-  }
-
-  private getAgentSpecificResponse(agentId: string, query: string): string {
-    // Simulation code removed
-    return '';
-  }
-  */
+  // All legacy simulation methods have been removed
 
   private addTrace(agentId: string, action: string, details: string): void {
     const trace: Trace = {
