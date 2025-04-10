@@ -142,16 +142,19 @@ class AutoGenAdapter {
 
   // Notify all message callbacks
   private notifyMessageCallbacks(messages: Message[]): void {
+    console.log("Notifying message callbacks with:", messages);
     this.messageCallbacks.forEach(callback => callback(messages));
   }
 
   // Notify all trace callbacks
   private notifyTraceCallbacks(traces: Trace[]): void {
+    console.log("Notifying trace callbacks with:", traces);
     this.traceCallbacks.forEach(callback => callback(traces));
   }
 
   // Notify all task callbacks
   private notifyTaskCallbacks(tasks: AgentTask[]): void {
+    console.log("Notifying task callbacks with:", tasks);
     this.taskCallbacks.forEach(callback => callback(tasks));
   }
 
@@ -185,39 +188,40 @@ class AutoGenAdapter {
           } else if (data.type === "message") {
             // Convert backend message format to frontend format
             const message: Message = {
-              id: data.data.id,
-              from: data.data.from,
-              to: data.data.to,
+              id: data.data.id || uuidv4(),
+              from: data.data.from || data.data.sender,
+              to: data.data.to || data.data.recipient,
               content: data.data.content,
-              timestamp: new Date(data.data.timestamp * 1000), // Convert UNIX timestamp to Date
-              type: data.data.type
+              timestamp: new Date(data.data.timestamp * 1000 || Date.now()), // Convert UNIX timestamp to Date or use current time
+              type: data.data.type || 'response'
             };
+            console.log("Processed message:", message);
             this.notifyMessageCallbacks([message]);
           } else if (data.type === "trace") {
             // Convert backend trace format to frontend format
             const trace: Trace = {
-              id: data.data.id,
+              id: data.data.id || uuidv4(),
               agentId: data.data.agentId,
               action: data.data.action,
               details: data.data.details,
-              timestamp: new Date(data.data.timestamp * 1000) // Convert UNIX timestamp to Date
+              timestamp: new Date(data.data.timestamp * 1000 || Date.now()) // Convert UNIX timestamp to Date or use current time
             };
             this.notifyTraceCallbacks([trace]);
           } else if (data.type === "task" || data.type === "task_update") {
             // Convert backend task format to frontend format
             const task: AgentTask = {
-              id: data.data.id,
+              id: data.data.id || uuidv4(),
               assignedTo: data.data.assignedTo,
               description: data.data.description,
               status: data.data.status,
-              createdAt: new Date(data.data.createdAt * 1000), // Convert UNIX timestamp to Date
+              createdAt: new Date(data.data.createdAt * 1000 || Date.now()), // Convert UNIX timestamp to Date or use current time
               completedAt: data.data.completedAt ? new Date(data.data.completedAt * 1000) : undefined,
               result: data.data.result
             };
             this.notifyTaskCallbacks([task]);
           }
         } catch (error) {
-          console.error("Error parsing WebSocket message:", error);
+          console.error("Error parsing WebSocket message:", error, "Raw message:", event.data);
         }
       };
       
@@ -254,6 +258,8 @@ class AutoGenAdapter {
       // Store the current conversation ID
       this.currentConversationId = conversationId;
 
+      console.log("Sending message to backend:", content);
+      
       // Send request to backend
       const response = await fetch(`${BACKEND_URL}/api/request`, {
         method: 'POST',
@@ -275,7 +281,7 @@ class AutoGenAdapter {
       console.log("Backend request result:", result);
 
       // Create a new conversation to track this request
-      if (!this.conversations.has(result.conversation_id)) {
+      if (result.conversation_id && !this.conversations.has(result.conversation_id)) {
         this.conversations.set(result.conversation_id, {
           id: result.conversation_id,
           agents: [],

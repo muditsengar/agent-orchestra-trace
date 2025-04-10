@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '../components/ui/button';
 import { Textarea } from '../components/ui/textarea';
@@ -9,6 +8,7 @@ import { agentService } from '../services/agentService';
 import { autogenAdapter } from '../services/autogenAdapter';
 import { rasaAdapter } from '../services/rasaAdapter';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { CircleCheck, CircleDot } from 'lucide-react';
 
 interface RequestFormProps {
   onRequestSubmitted?: () => void;
@@ -19,7 +19,9 @@ const RequestForm: React.FC<RequestFormProps> = ({ onRequestSubmitted }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [framework, setFramework] = useState<'native' | 'autogen' | 'langchain' | 'rasa'>('native');
   const [autogenConnected, setAutogenConnected] = useState(false);
+  const [autogenConnecting, setAutogenConnecting] = useState(false);
   const [rasaConnected, setRasaConnected] = useState(false);
+  const [rasaConnecting, setRasaConnecting] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -33,14 +35,17 @@ const RequestForm: React.FC<RequestFormProps> = ({ onRequestSubmitted }) => {
           setAutogenConnected(isConnected);
           if (!isConnected) {
             console.log("Trying to connect to AutoGen backend...");
+            setAutogenConnecting(true);
             const connected = await autogenAdapter.connect();
             setAutogenConnected(connected);
+            setAutogenConnecting(false);
             if (!connected) {
               setConnectionError("Could not connect to AutoGen backend. Make sure the backend server is running and the API key is configured.");
             }
           }
         } catch (error) {
           console.error("Failed to connect to AutoGen:", error);
+          setAutogenConnecting(false);
           setConnectionError(`Failed to connect to AutoGen: ${error instanceof Error ? error.message : String(error)}`);
         }
       } else if (framework === 'rasa') {
@@ -48,10 +53,13 @@ const RequestForm: React.FC<RequestFormProps> = ({ onRequestSubmitted }) => {
         setRasaConnected(isConnected);
         if (!isConnected) {
           try {
+            setRasaConnecting(true);
             const connected = await rasaAdapter.connect();
             setRasaConnected(connected);
+            setRasaConnecting(false);
           } catch (error) {
             console.error("Failed to connect to Rasa:", error);
+            setRasaConnecting(false);
             setConnectionError(`Failed to connect to Rasa: ${error instanceof Error ? error.message : String(error)}`);
           }
         }
@@ -71,13 +79,16 @@ const RequestForm: React.FC<RequestFormProps> = ({ onRequestSubmitted }) => {
       
       try {
         console.log("Connecting to AutoGen backend after framework change...");
+        setAutogenConnecting(true);
         const connected = await autogenAdapter.connect();
         setAutogenConnected(connected);
+        setAutogenConnecting(false);
         if (!connected) {
           setConnectionError("Could not connect to AutoGen backend. Make sure the backend server is running and the API key is configured.");
         }
       } catch (error) {
         console.error("Failed to connect to AutoGen:", error);
+        setAutogenConnecting(false);
         toast.error("Failed to connect to AutoGen backend");
         setConnectionError(`Failed to connect to AutoGen: ${error instanceof Error ? error.message : String(error)}`);
       }
@@ -88,10 +99,13 @@ const RequestForm: React.FC<RequestFormProps> = ({ onRequestSubmitted }) => {
       agentService.toggleRasa(true);
       
       try {
+        setRasaConnecting(true);
         const connected = await rasaAdapter.connect();
         setRasaConnected(connected);
+        setRasaConnecting(false);
       } catch (error) {
         console.error("Failed to connect to Rasa:", error);
+        setRasaConnecting(false);
         toast.error("Failed to connect to Rasa backend");
         setConnectionError(`Failed to connect to Rasa: ${error instanceof Error ? error.message : String(error)}`);
       }
@@ -118,6 +132,19 @@ const RequestForm: React.FC<RequestFormProps> = ({ onRequestSubmitted }) => {
     if (framework === 'autogen' && !autogenConnected) return false;
     if (framework === 'rasa' && !rasaConnected) return false;
     return true;
+  };
+
+  const renderConnectionStatus = (type: 'autogen' | 'rasa') => {
+    const isConnected = type === 'autogen' ? autogenConnected : rasaConnected;
+    const isConnecting = type === 'autogen' ? autogenConnecting : rasaConnecting;
+    
+    if (isConnected) {
+      return <CircleCheck className="h-3 w-3 text-green-500 ml-1" />
+    } else if (isConnecting) {
+      return <CircleDot className="h-3 w-3 text-amber-500 ml-1" />
+    } else {
+      return <CircleDot className="h-3 w-3 text-gray-300 ml-1" />
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -162,9 +189,7 @@ const RequestForm: React.FC<RequestFormProps> = ({ onRequestSubmitted }) => {
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="autogen" id="autogen" />
               <Label htmlFor="autogen" className="cursor-pointer">AutoGen</Label>
-              {framework === 'autogen' && (
-                <span className={`h-2 w-2 rounded-full ml-1 ${autogenConnected ? 'bg-green-500' : 'bg-amber-500'}`} />
-              )}
+              {framework === 'autogen' && renderConnectionStatus('autogen')}
             </div>
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="langchain" id="langchain" />
@@ -173,9 +198,7 @@ const RequestForm: React.FC<RequestFormProps> = ({ onRequestSubmitted }) => {
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="rasa" id="rasa" />
               <Label htmlFor="rasa" className="cursor-pointer">Rasa</Label>
-              {framework === 'rasa' && (
-                <span className={`h-2 w-2 rounded-full ml-1 ${rasaConnected ? 'bg-green-500' : 'bg-amber-500'}`} />
-              )}
+              {framework === 'rasa' && renderConnectionStatus('rasa')}
             </div>
           </RadioGroup>
         </div>
@@ -205,6 +228,7 @@ const RequestForm: React.FC<RequestFormProps> = ({ onRequestSubmitted }) => {
               <span>
                 {autogenConnected ? 
                   "Connected to AutoGen backend" : 
+                  autogenConnecting ? "Connecting to AutoGen backend..." :
                   "Not connected to AutoGen backend"}
               </span>
             )}
