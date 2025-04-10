@@ -259,8 +259,9 @@ class AgentService {
             to: msg.recipient || 'user',
             content: msg.content,
             timestamp: new Date(),
-            // Fix here: Use a default type if msg.type is undefined
-            type: this.validateMessageType(msg.type || 'response')
+            // Since msg.type doesn't exist in the RasaAdapter's message objects,
+            // we'll pass 'response' as the default message type
+            type: 'response' as 'response' | 'request' | 'internal'
           }));
           
           this.handleNewMessages(formattedMessages);
@@ -303,8 +304,9 @@ class AgentService {
             to: msg.recipient || 'user',
             content: msg.content,
             timestamp: new Date(),
-            // Fix here: Use a default type if msg.type is undefined
-            type: this.validateMessageType(msg.type || 'response')
+            // Since msg.type doesn't exist in the RasaAdapter's message objects,
+            // we'll pass 'response' as the default message type
+            type: 'response' as 'response' | 'request' | 'internal'
           }));
           
           this.handleNewMessages(formattedMessages);
