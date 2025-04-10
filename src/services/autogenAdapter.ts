@@ -33,6 +33,10 @@ class AutoGenAdapter {
   private conversations: Map<string, AutoGenConversation> = new Map();
   private isConnected: boolean = false;
   private websocket: WebSocket | null = null;
+  private messageCallbacks: ((messages: Message[]) => void)[] = [];
+  private traceCallbacks: ((traces: Trace[]) => void)[] = [];
+  private taskCallbacks: ((tasks: AgentTask[]) => void)[] = [];
+  private currentConversationId: string | null = null;
 
   private constructor() {}
 
@@ -60,6 +64,7 @@ class AutoGenAdapter {
       
       // Generate a unique ID for the conversation
       const conversationId = uuidv4();
+      this.currentConversationId = conversationId;
       
       // Initialize an empty conversation
       this.conversations.set(conversationId, {
@@ -120,6 +125,36 @@ class AutoGenAdapter {
     }
   }
 
+  // Register callback for message updates
+  public registerMessageCallback(callback: (messages: Message[]) => void): void {
+    this.messageCallbacks.push(callback);
+  }
+
+  // Register callback for trace updates
+  public registerTraceCallback(callback: (traces: Trace[]) => void): void {
+    this.traceCallbacks.push(callback);
+  }
+
+  // Register callback for task updates
+  public registerTaskCallback(callback: (tasks: AgentTask[]) => void): void {
+    this.taskCallbacks.push(callback);
+  }
+
+  // Notify all message callbacks
+  private notifyMessageCallbacks(messages: Message[]): void {
+    this.messageCallbacks.forEach(callback => callback(messages));
+  }
+
+  // Notify all trace callbacks
+  private notifyTraceCallbacks(traces: Trace[]): void {
+    this.traceCallbacks.forEach(callback => callback(traces));
+  }
+
+  // Notify all task callbacks
+  private notifyTaskCallbacks(tasks: AgentTask[]): void {
+    this.taskCallbacks.forEach(callback => callback(tasks));
+  }
+
   // Connect to WebSocket for real-time updates
   private connectWebSocket() {
     try {
@@ -147,6 +182,39 @@ class AutoGenAdapter {
           // Handle different types of messages
           if (data.type === "pong") {
             console.log("Pong received from server");
+          } else if (data.type === "message") {
+            // Convert backend message format to frontend format
+            const message: Message = {
+              id: data.data.id,
+              from: data.data.from,
+              to: data.data.to,
+              content: data.data.content,
+              timestamp: new Date(data.data.timestamp * 1000), // Convert UNIX timestamp to Date
+              type: data.data.type
+            };
+            this.notifyMessageCallbacks([message]);
+          } else if (data.type === "trace") {
+            // Convert backend trace format to frontend format
+            const trace: Trace = {
+              id: data.data.id,
+              agentId: data.data.agentId,
+              action: data.data.action,
+              details: data.data.details,
+              timestamp: new Date(data.data.timestamp * 1000) // Convert UNIX timestamp to Date
+            };
+            this.notifyTraceCallbacks([trace]);
+          } else if (data.type === "task" || data.type === "task_update") {
+            // Convert backend task format to frontend format
+            const task: AgentTask = {
+              id: data.data.id,
+              assignedTo: data.data.assignedTo,
+              description: data.data.description,
+              status: data.data.status,
+              createdAt: new Date(data.data.createdAt * 1000), // Convert UNIX timestamp to Date
+              completedAt: data.data.completedAt ? new Date(data.data.completedAt * 1000) : undefined,
+              result: data.data.result
+            };
+            this.notifyTaskCallbacks([task]);
           }
         } catch (error) {
           console.error("Error parsing WebSocket message:", error);
@@ -182,6 +250,9 @@ class AutoGenAdapter {
           throw new Error("Cannot send message - not connected to backend");
         }
       }
+
+      // Store the current conversation ID
+      this.currentConversationId = conversationId;
 
       // Send request to backend
       const response = await fetch(`${BACKEND_URL}/api/request`, {

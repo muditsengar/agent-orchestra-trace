@@ -22,13 +22,50 @@ class AgentService {
   private useRasa: boolean = false;
   private currentFramework: 'native' | 'autogen' | 'langchain' | 'rasa' = 'native';
 
-  private constructor() {}
+  private constructor() {
+    // Register for updates from autogenAdapter
+    autogenAdapter.registerMessageCallback(this.handleNewMessages.bind(this));
+    autogenAdapter.registerTraceCallback(this.handleNewTraces.bind(this));
+    autogenAdapter.registerTaskCallback(this.handleNewTasks.bind(this));
+  }
 
   public static getInstance(): AgentService {
     if (!AgentService.instance) {
       AgentService.instance = new AgentService();
     }
     return AgentService.instance;
+  }
+
+  // Handler for new messages from AutoGen
+  private handleNewMessages(messages: Message[]): void {
+    this.messages = [...this.messages, ...messages];
+    this.notifyUpdate();
+  }
+
+  // Handler for new traces from AutoGen
+  private handleNewTraces(traces: Trace[]): void {
+    this.traces = [...this.traces, ...traces];
+    this.notifyUpdate();
+  }
+
+  // Handler for new tasks from AutoGen
+  private handleNewTasks(tasks: AgentTask[]): void {
+    // Check if we need to update existing tasks or add new ones
+    const updatedTasks = [...this.tasks];
+    
+    tasks.forEach(newTask => {
+      const existingTaskIndex = updatedTasks.findIndex(t => t.id === newTask.id);
+      if (existingTaskIndex >= 0) {
+        // Update existing task
+        updatedTasks[existingTaskIndex] = newTask;
+      } else {
+        // Add new task
+        updatedTasks.push(newTask);
+      }
+    });
+    
+    this.tasks = updatedTasks;
+    this.notifyUpdate();
   }
 
   public getMessages(): Message[] {
@@ -181,35 +218,10 @@ class AgentService {
       }
       
       // Send message to AutoGen
-      const response = await autogenAdapter.sendMessage(this.conversationId, content);
+      await autogenAdapter.sendMessage(this.conversationId, content);
       
-      if (!response) {
-        throw new Error('No response from AutoGen');
-      }
+      // The responses will be handled by the registered callbacks
       
-      // Process AutoGen messages
-      for (const msg of response.messages) {
-        this.messages.push({
-          id: uuidv4(),
-          from: msg.sender,
-          to: msg.recipient,
-          content: msg.content,
-          timestamp: msg.timestamp,
-          type: msg.recipient === 'user' ? 'response' : 'internal'
-        });
-      }
-      
-      // Process traces
-      for (const trace of response.traces) {
-        this.traces.push(trace);
-      }
-      
-      // Process tasks
-      for (const task of response.tasks) {
-        this.tasks.push(task);
-      }
-      
-      this.notifyUpdate();
     } catch (error) {
       console.error('Error in AutoGen processing:', error);
       throw error;
@@ -233,42 +245,10 @@ class AgentService {
       // In a full implementation, this would send the message directly to the specific agent
       // For now, we'll simulate by using the existing sendMessage but adding context
       const directedContent = `[DIRECT MESSAGE TO ${agentId}] ${content}`;
-      const response = await autogenAdapter.sendMessage(this.conversationId, directedContent);
+      await autogenAdapter.sendMessage(this.conversationId, directedContent);
       
-      if (!response) {
-        throw new Error('No response from AutoGen');
-      }
+      // The responses will be handled by the registered callbacks
       
-      // Process AutoGen messages - modify them to show they're responses to the direct message
-      for (const msg of response.messages) {
-        // If this is from the target agent or to the target agent, process it
-        if (msg.sender === agentId || msg.recipient === agentId) {
-          this.messages.push({
-            id: uuidv4(),
-            from: msg.sender,
-            to: msg.recipient,
-            content: msg.content,
-            timestamp: msg.timestamp,
-            type: msg.recipient === 'user' ? 'response' : 'internal'
-          });
-        }
-      }
-      
-      // Process relevant traces
-      for (const trace of response.traces) {
-        if (trace.agentId === agentId) {
-          this.traces.push(trace);
-        }
-      }
-      
-      // Process relevant tasks
-      for (const task of response.tasks) {
-        if (task.assignedTo === agentId) {
-          this.tasks.push(task);
-        }
-      }
-      
-      this.notifyUpdate();
     } catch (error) {
       console.error('Error in AutoGen direct message processing:', error);
       throw error;
