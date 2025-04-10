@@ -1,3 +1,4 @@
+
 import { v4 as uuidv4 } from 'uuid';
 import { Message, Trace, AgentTask } from '../types/agent';
 import { autogenAdapter } from './autogenAdapter';
@@ -258,6 +259,7 @@ class AgentService {
             to: msg.recipient || 'user',
             content: msg.content,
             timestamp: new Date(),
+            // Fix here: Use a default type if msg.type is undefined
             type: this.validateMessageType(msg.type || 'response')
           }));
           
@@ -301,6 +303,7 @@ class AgentService {
             to: msg.recipient || 'user',
             content: msg.content,
             timestamp: new Date(),
+            // Fix here: Use a default type if msg.type is undefined
             type: this.validateMessageType(msg.type || 'response')
           }));
           
