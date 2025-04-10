@@ -1,3 +1,4 @@
+
 // This adapter integrates with Microsoft AutoGen through our Python backend
 import { v4 as uuidv4 } from 'uuid';
 import { Message, Trace, AgentTask } from '../types/agent';
@@ -45,6 +46,36 @@ class AutoGenAdapter {
   // Check if connected to AutoGen backend
   public isBackendConnected(): boolean {
     return this.isConnected;
+  }
+
+  // Create a new conversation and return its ID
+  public async createConversation(): Promise<string> {
+    try {
+      if (!this.isConnected) {
+        const connected = await this.connect();
+        if (!connected) {
+          throw new Error("Cannot create conversation - not connected to backend");
+        }
+      }
+      
+      // Generate a unique ID for the conversation
+      const conversationId = uuidv4();
+      
+      // Initialize an empty conversation
+      this.conversations.set(conversationId, {
+        id: conversationId,
+        agents: [],
+        messages: [],
+        status: 'initializing'
+      });
+      
+      console.log("Created new conversation with ID:", conversationId);
+      return conversationId;
+    } catch (error) {
+      console.error("Error creating conversation:", error);
+      toast.error("Failed to create conversation");
+      throw error;
+    }
   }
 
   // Connect to AutoGen backend

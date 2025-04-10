@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import AgentSystemDashboard from '../components/AgentSystemDashboard';
 import { toast } from '../components/ui/sonner';
@@ -16,14 +15,11 @@ const Index = () => {
   }>({ running: false });
 
   useEffect(() => {
-    // Check if we can render the main component
     try {
       console.log("Initializing Index page");
       
-      // Check backend status and ensure components load even if backend is unavailable
       const checkConnection = async () => {
         try {
-          // Try to connect to the backend
           const response = await fetch('http://localhost:8000/status', {
             method: 'GET',
             headers: {
@@ -43,7 +39,6 @@ const Index = () => {
               openai_api_key_configured: status.openai_api_key_configured
             });
             
-            // Try to connect to AutoGen if backend is running
             if (status.autogen_installed && status.openai_api_key_configured) {
               try {
                 await autogenAdapter.connect();
@@ -56,7 +51,6 @@ const Index = () => {
             setBackendStatus({ running: false });
           }
           
-          // Continue loading the UI even if backend is not available
           setIsLoading(false);
         } catch (err) {
           console.error("Failed during initialization:", err);
@@ -142,7 +136,7 @@ const Index = () => {
       
       {backendStatus.running && !backendStatus.openai_api_key_configured && (
         <div className="container mx-auto px-4 py-4">
-          <Alert variant="warning" className="mb-4">
+          <Alert variant="destructive" className="mb-4">
             <AlertTitle>OpenAI API Key Not Configured</AlertTitle>
             <AlertDescription>
               The backend is running, but the OpenAI API key is not configured. AutoGen will not work properly.
