@@ -285,7 +285,7 @@ class AgentService {
             to: msg.recipient || 'user',
             content: msg.content,
             timestamp: new Date(),
-            type: 'response'
+            type: 'response' as 'response' | 'request' | 'internal'
           }));
           
           this.handleNewMessages(formattedMessages);
@@ -335,7 +335,7 @@ class AgentService {
             to: msg.recipient || 'user',
             content: msg.content,
             timestamp: new Date(),
-            type: 'response'
+            type: 'response' as 'response' | 'request' | 'internal'
           }));
           
           this.handleNewMessages(formattedMessages);

@@ -1,3 +1,4 @@
+
 // This adapter integrates with Microsoft AutoGen through our Python backend
 import { v4 as uuidv4 } from 'uuid';
 import { Message, Trace, AgentTask } from '../types/agent';
@@ -221,13 +222,15 @@ class AutoGenAdapter {
               console.log("Pong received from server");
             } else if (data.type === "message") {
               // Convert backend message format to frontend format
+              const messageType = this.determineMessageType(data.data.type);
+              
               const message: Message = {
                 id: data.data.id || uuidv4(),
                 from: data.data.from || data.data.sender || (data.data.from_agent || "unknown-agent"),
                 to: data.data.to || data.data.recipient || (data.data.to_agent || "user"),
                 content: data.data.content || "",
                 timestamp: new Date(data.data.timestamp ? data.data.timestamp * 1000 : Date.now()), // Convert UNIX timestamp to Date or use current time
-                type: data.data.type || 'response'
+                type: messageType
               };
               console.log("Processed message:", message);
               this.notifyMessageCallbacks([message]);
@@ -285,6 +288,21 @@ class AutoGenAdapter {
         reject(error);
       }
     });
+  }
+
+  // Helper method to determine the correct message type
+  private determineMessageType(typeFromBackend?: string): 'response' | 'request' | 'internal' {
+    if (!typeFromBackend) {
+      return 'response'; // Default type
+    }
+    
+    if (typeFromBackend === 'request') {
+      return 'request';
+    } else if (typeFromBackend === 'internal') {
+      return 'internal';
+    } else {
+      return 'response';
+    }
   }
 
   // Submit a message to the backend AutoGen
