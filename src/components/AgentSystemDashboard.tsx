@@ -3,6 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { ScrollArea } from '../components/ui/scroll-area';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
+import { Alert, AlertDescription, AlertTitle } from '../components/ui/alert';
+import { toast } from '../components/ui/sonner';
 import AgentMessage from './AgentMessage';
 import TraceItem from './TraceItem';
 import TaskItem from './TaskItem';
@@ -17,26 +19,44 @@ const AgentSystemDashboard: React.FC = () => {
   const [tasks, setTasks] = useState<AgentTask[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [activeTab, setActiveTab] = useState<string>("multi-agent");
+  const [hasError, setHasError] = useState(false);
 
   // Update data when the agent service updates
   useEffect(() => {
-    const handleUpdate = () => {
+    console.log("Initializing AgentSystemDashboard");
+    
+    try {
+      // Initial load
       setMessages([...agentService.getMessages()]);
       setTraces([...agentService.getTraces()]);
       setTasks([...agentService.getTasks()]);
       setIsProcessing(agentService.isProcessing());
-    };
-
-    // Initial load
-    handleUpdate();
-
-    // Register for updates
-    agentService.registerUpdateCallback(handleUpdate);
-
-    // Cleanup on unmount
-    return () => {
-      agentService.unregisterUpdateCallback(handleUpdate);
-    };
+      
+      // Register for updates
+      const handleUpdate = () => {
+        try {
+          setMessages([...agentService.getMessages()]);
+          setTraces([...agentService.getTraces()]);
+          setTasks([...agentService.getTasks()]);
+          setIsProcessing(agentService.isProcessing());
+        } catch (err) {
+          console.error("Error during update:", err);
+          setHasError(true);
+          toast.error("Failed to update agent data");
+        }
+      };
+      
+      agentService.registerUpdateCallback(handleUpdate);
+  
+      // Cleanup on unmount
+      return () => {
+        agentService.unregisterUpdateCallback(handleUpdate);
+      };
+    } catch (err) {
+      console.error("Failed to initialize dashboard:", err);
+      setHasError(true);
+      toast.error("Failed to initialize dashboard");
+    }
   }, []);
 
   // Filter messages for the main conversation (user to coordinator, executor to user)
@@ -50,6 +70,41 @@ const AgentSystemDashboard: React.FC = () => {
   const internalMessages = messages.filter(
     msg => msg.type === 'internal'
   );
+
+  if (hasError) {
+    return (
+      <div className="container mx-auto p-4">
+        <Alert variant="destructive" className="mb-4">
+          <AlertTitle>Dashboard Error</AlertTitle>
+          <AlertDescription>
+            There was a problem loading the agent dashboard. This might happen if the backend is not running 
+            or there's a connection issue. Please check the console for more details.
+          </AlertDescription>
+        </Alert>
+        <Card className="w-full">
+          <CardHeader>
+            <CardTitle>Troubleshooting</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ol className="list-decimal list-inside space-y-2 text-sm">
+              <li>Make sure the backend server is running</li>
+              <li>Check that you've set up the API keys correctly in the .env file</li>
+              <li>Check the browser console for more detailed error messages</li>
+              <li>Try refreshing the page</li>
+            </ol>
+            <div className="mt-4">
+              <button
+                onClick={() => window.location.reload()}
+                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+              >
+                Refresh Page
+              </button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="container-fluid px-0 py-4 max-w-full text-[90%]">
