@@ -1,3 +1,4 @@
+
 import { v4 as uuidv4 } from 'uuid';
 import { Message, Trace, AgentTask } from '../types/agent';
 import { autogenAdapter } from './autogenAdapter';
@@ -152,11 +153,13 @@ class AgentService {
       if (this.useAutogen) {
         await this.processWithAutogen(content);
       } else if (this.useLangChain) {
-        await this.simulateLangChain(content);
+        // Not simulating LangChain anymore - just add a message that this is not implemented
+        this.addTrace('coordinator-1', 'langchain_not_implemented', 'LangChain processing is not implemented yet');
       } else if (this.useRasa) {
         await this.processWithRasa(content);
       } else {
-        await this.simulateNative(content);
+        // Not simulating Native anymore - just add a message that this is not implemented
+        this.addTrace('coordinator-1', 'native_not_implemented', 'Native processing is not implemented yet');
       }
       
     } catch (error) {
@@ -190,11 +193,15 @@ class AgentService {
       if (this.useAutogen) {
         await this.processDirectMessageWithAutogen(agentId, content);
       } else if (this.useLangChain) {
-        await this.simulateDirectMessageWithLangChain(agentId, content);
+        // Not simulating LangChain anymore
+        this.addTrace(agentId, 'direct_message_received', `Direct message from user: ${content}`);
+        this.addTrace(agentId, 'langchain_not_implemented', 'LangChain direct messaging is not implemented yet');
       } else if (this.useRasa) {
         await this.processDirectMessageWithRasa(agentId, content);
       } else {
-        await this.simulateDirectMessageNative(agentId, content);
+        // Not simulating Native anymore
+        this.addTrace(agentId, 'direct_message_received', `Direct message from user: ${content}`);
+        this.addTrace(agentId, 'native_not_implemented', 'Native direct messaging is not implemented yet');
       }
       
     } catch (error) {
@@ -257,9 +264,43 @@ class AgentService {
 
   private async processWithRasa(content: string): Promise<void> {
     try {
-      // We would implement Rasa integration here
-      // For now, use the simulated version
-      await this.simulateRasa(content);
+      // We would implement actual Rasa integration here
+      const rasaConnected = await rasaAdapter.isBackendConnected();
+      if (!rasaConnected) {
+        await rasaAdapter.connect();
+      }
+      
+      const conversationId = await rasaAdapter.createConversation();
+      if (!conversationId) {
+        throw new Error('Failed to create Rasa conversation');
+      }
+      
+      const response = await rasaAdapter.sendMessage(conversationId, content);
+      if (response) {
+        // Process any messages received from Rasa
+        if (response.messages && response.messages.length > 0) {
+          const formattedMessages = response.messages.map(msg => ({
+            id: uuidv4(),
+            from: msg.sender || 'rasa-agent',
+            to: msg.recipient || 'user',
+            content: msg.content,
+            timestamp: new Date(),
+            type: 'response'
+          }));
+          
+          this.handleNewMessages(formattedMessages);
+        }
+        
+        // Process any traces received from Rasa
+        if (response.traces && response.traces.length > 0) {
+          this.handleNewTraces(response.traces);
+        }
+        
+        // Process any tasks received from Rasa
+        if (response.tasks && response.tasks.length > 0) {
+          this.handleNewTasks(response.tasks);
+        }
+      }
     } catch (error) {
       console.error('Error in Rasa processing:', error);
       throw error;
@@ -268,264 +309,85 @@ class AgentService {
 
   private async processDirectMessageWithRasa(agentId: string, content: string): Promise<void> {
     try {
-      // We would implement Rasa direct message integration here
-      // For now, use the simulated version
-      await this.simulateDirectMessageWithRasa(agentId, content);
+      // We would implement actual Rasa direct message integration here
+      const rasaConnected = await rasaAdapter.isBackendConnected();
+      if (!rasaConnected) {
+        await rasaAdapter.connect();
+      }
+      
+      const conversationId = await rasaAdapter.createConversation();
+      if (!conversationId) {
+        throw new Error('Failed to create Rasa conversation');
+      }
+      
+      // Add a trace
+      this.addTrace(agentId, 'direct_message_received', `Direct message from user to ${agentId}: ${content}`);
+      
+      const directedContent = `[DIRECT MESSAGE TO ${agentId}] ${content}`;
+      const response = await rasaAdapter.sendMessage(conversationId, directedContent);
+      
+      if (response) {
+        // Process any messages received from Rasa
+        if (response.messages && response.messages.length > 0) {
+          const formattedMessages = response.messages.map(msg => ({
+            id: uuidv4(),
+            from: msg.sender || agentId,
+            to: msg.recipient || 'user',
+            content: msg.content,
+            timestamp: new Date(),
+            type: 'response'
+          }));
+          
+          this.handleNewMessages(formattedMessages);
+        }
+        
+        // Process any traces received from Rasa
+        if (response.traces && response.traces.length > 0) {
+          this.handleNewTraces(response.traces);
+        }
+        
+        // Process any tasks received from Rasa
+        if (response.tasks && response.tasks.length > 0) {
+          this.handleNewTasks(response.tasks);
+        }
+      }
     } catch (error) {
       console.error('Error in Rasa direct message processing:', error);
       throw error;
     }
   }
 
+  // Commented out all simulation methods
+  /*
   private async simulateLangChain(content: string): Promise<void> {
-    // Simulate LangChain processing with delays
-    this.addTrace('coordinator-1', 'simulating_langchain', 'Simulating LangChain processing');
-    
-    // Create an agent task
-    const task: AgentTask = {
-      id: uuidv4(),
-      assignedTo: 'coordinator-1',
-      description: `Process user request: ${content}`,
-      status: 'pending',
-      createdAt: new Date()
-    };
-    
-    this.tasks.push(task);
-    this.notifyUpdate();
-    
-    // Simulate processing delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Update task status
-    const taskIndex = this.tasks.findIndex(t => t.id === task.id);
-    if (taskIndex >= 0) {
-      this.tasks[taskIndex].status = 'in-progress';
-      this.notifyUpdate();
-    }
-    
-    // Simulate processing delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Add agent response
-    const response = `I've analyzed your request and broken it down into a day-by-day plan. Here's what I recommend:
-
-Day 1: [Actionable step]
-Day 2: [Actionable step]
-Day 3: [Actionable step]
-...
-
-This plan should help you achieve your goal step by step.`;
-    
-    const responseMessage: Message = {
-      id: uuidv4(),
-      from: 'coordinator-1',
-      to: 'user',
-      content: response,
-      timestamp: new Date(),
-      type: 'response'
-    };
-    
-    this.messages.push(responseMessage);
-    
-    // Update task status
-    if (taskIndex >= 0) {
-      this.tasks[taskIndex].status = 'completed';
-      this.tasks[taskIndex].completedAt = new Date();
-      this.tasks[taskIndex].result = 'Completed simulated LangChain processing';
-      this.notifyUpdate();
-    }
-    
-    // Add trace
-    this.addTrace('coordinator-1', 'simulated_langchain_response', 'Sent simulated LangChain response to user');
+    // Simulation code removed
   }
 
   private async simulateDirectMessageWithLangChain(agentId: string, content: string): Promise<void> {
-    // Add a trace
-    this.addTrace(agentId, 'direct_message_received', `Direct message from user: ${content}`);
-    
-    // Create an agent task
-    const task: AgentTask = {
-      id: uuidv4(),
-      assignedTo: agentId,
-      description: `Process direct request from user: ${content}`,
-      status: 'pending',
-      createdAt: new Date()
-    };
-    
-    this.tasks.push(task);
-    this.notifyUpdate();
-    
-    // Simulate processing delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Update task status
-    const taskIndex = this.tasks.findIndex(t => t.id === task.id);
-    if (taskIndex >= 0) {
-      this.tasks[taskIndex].status = 'in-progress';
-      this.notifyUpdate();
-    }
-    
-    // Simulate processing delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Add agent response
-    const response = `I've received your direct message and analyzed it carefully. Here's my response based on my specialized capabilities:
-
-${this.getAgentSpecificResponse(agentId, content)}
-
-Is there anything specific you'd like me to elaborate on or any follow-up actions you'd like me to take?`;
-    
-    const responseMessage: Message = {
-      id: uuidv4(),
-      from: agentId,
-      to: 'user',
-      content: response,
-      timestamp: new Date(),
-      type: 'response'
-    };
-    
-    this.messages.push(responseMessage);
-    
-    // Update task status
-    if (taskIndex >= 0) {
-      this.tasks[taskIndex].status = 'completed';
-      this.tasks[taskIndex].completedAt = new Date();
-      this.tasks[taskIndex].result = 'Completed direct response to user';
-      this.notifyUpdate();
-    }
-    
-    // Add trace
-    this.addTrace(agentId, 'direct_message_response_sent', 'Sent direct response to user');
+    // Simulation code removed
   }
 
   private async simulateRasa(content: string): Promise<void> {
-    // Simulate Rasa processing with delays
-    this.addTrace('coordinator-1', 'simulating_rasa', 'Simulating Rasa processing');
-    
-    // Create an agent task
-    const task: AgentTask = {
-      id: uuidv4(),
-      assignedTo: 'coordinator-1',
-      description: `Process user request with Rasa: ${content}`,
-      status: 'pending',
-      createdAt: new Date()
-    };
-    
-    this.tasks.push(task);
-    this.notifyUpdate();
-    
-    // Simulate processing delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Update task status
-    const taskIndex = this.tasks.findIndex(t => t.id === task.id);
-    if (taskIndex >= 0) {
-      this.tasks[taskIndex].status = 'in-progress';
-      this.notifyUpdate();
-    }
-    
-    // Simulate processing delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Add agent response
-    const response = `I've analyzed your request and created a comprehensive plan with daily activities and detailed examples. Here's what I recommend:
-
-Day 1: [Activity with example]
-Day 2: [Activity with example]
-Day 3: [Activity with example]
-...
-
-This plan should help you achieve your goal with clear, actionable steps.`;
-    
-    const responseMessage: Message = {
-      id: uuidv4(),
-      from: 'coordinator-1',
-      to: 'user',
-      content: response,
-      timestamp: new Date(),
-      type: 'response'
-    };
-    
-    this.messages.push(responseMessage);
-    
-    // Update task status
-    if (taskIndex >= 0) {
-      this.tasks[taskIndex].status = 'completed';
-      this.tasks[taskIndex].completedAt = new Date();
-      this.tasks[taskIndex].result = 'Completed simulated Rasa processing';
-      this.notifyUpdate();
-    }
-    
-    // Add trace
-    this.addTrace('coordinator-1', 'simulated_rasa_response', 'Sent simulated Rasa response to user');
+    // Simulation code removed
   }
 
   private async simulateDirectMessageWithRasa(agentId: string, content: string): Promise<void> {
-    await this.simulateDirectMessageWithLangChain(agentId, content);
+    // Simulation code removed
   }
 
   private async simulateNative(content: string): Promise<void> {
-    // Simulate native multi-agent processing with delays
-    this.addTrace('coordinator-1', 'simulating_native', 'Simulating native multi-agent processing');
-    
-    // Create an agent task
-    const task: AgentTask = {
-      id: uuidv4(),
-      assignedTo: 'coordinator-1',
-      description: `Process user request natively: ${content}`,
-      status: 'pending',
-      createdAt: new Date()
-    };
-    
-    this.tasks.push(task);
-    this.notifyUpdate();
-    
-    // Simulate processing delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Update task status
-    const taskIndex = this.tasks.findIndex(t => t.id === task.id);
-    if (taskIndex >= 0) {
-      this.tasks[taskIndex].status = 'in-progress';
-      this.notifyUpdate();
-    }
-    
-    // Simulate processing delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Add agent response
-    const response = `I've analyzed your request and coordinated with the agents. Here's the solution we've come up with:
-
-[Solution details]
-
-This should address all aspects of your request.`;
-    
-    const responseMessage: Message = {
-      id: uuidv4(),
-      from: 'coordinator-1',
-      to: 'user',
-      content: response,
-      timestamp: new Date(),
-      type: 'response'
-    };
-    
-    this.messages.push(responseMessage);
-    
-    // Update task status
-    if (taskIndex >= 0) {
-      this.tasks[taskIndex].status = 'completed';
-      this.tasks[taskIndex].completedAt = new Date();
-      this.tasks[taskIndex].result = 'Completed simulated native processing';
-      this.notifyUpdate();
-    }
-    
-    // Add trace
-    this.addTrace('coordinator-1', 'simulated_native_response', 'Sent simulated native response to user');
+    // Simulation code removed
   }
 
   private async simulateDirectMessageNative(agentId: string, content: string): Promise<void> {
-    await this.simulateDirectMessageWithLangChain(agentId, content);
+    // Simulation code removed
   }
+
+  private getAgentSpecificResponse(agentId: string, query: string): string {
+    // Simulation code removed
+    return '';
+  }
+  */
 
   private addTrace(agentId: string, action: string, details: string): void {
     const trace: Trace = {
@@ -538,29 +400,6 @@ This should address all aspects of your request.`;
     
     this.traces.push(trace);
     this.notifyUpdate();
-  }
-
-  private getAgentSpecificResponse(agentId: string, query: string): string {
-    switch (agentId) {
-      case 'coordinator-1':
-        return `As the Coordinator, I've analyzed your request and determined the best approach. 
-I'll coordinate with the other agents to ensure we address all aspects of "${query}".`;
-      
-      case 'researcher-1':
-        return `As the Researcher, I've gathered information related to "${query}". 
-My analysis shows several relevant data points that can help address your needs.`;
-      
-      case 'planner-1':
-        return `As the Planner, I've developed a structured approach to address "${query}". 
-The plan includes key milestones and consideration of potential challenges.`;
-      
-      case 'executor-1':
-        return `As the Executor, I'm ready to implement solutions for "${query}". 
-I can provide specific actionable steps based on the research and planning that's been done.`;
-      
-      default:
-        return `I've analyzed your request regarding "${query}" and am ready to assist further.`;
-    }
   }
 }
 

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '../components/ui/button';
 import { Textarea } from '../components/ui/textarea';
@@ -67,6 +68,21 @@ const RequestForm: React.FC<RequestFormProps> = ({ onRequestSubmitted }) => {
     };
     
     checkConnections();
+    
+    // Set up periodic checking for connection status
+    const connectionCheckInterval = setInterval(async () => {
+      if (framework === 'autogen') {
+        const isConnected = await autogenAdapter.isBackendConnected();
+        setAutogenConnected(isConnected);
+      } else if (framework === 'rasa') {
+        const isConnected = await rasaAdapter.isBackendConnected();
+        setRasaConnected(isConnected);
+      }
+    }, 5000);
+    
+    return () => {
+      clearInterval(connectionCheckInterval);
+    };
   }, [framework]);
 
   const handleFrameworkChange = async (value: 'native' | 'autogen' | 'langchain' | 'rasa') => {
